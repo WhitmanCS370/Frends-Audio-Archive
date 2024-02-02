@@ -42,7 +42,7 @@ if argvlen<=1 or sys.argv[1]=='--help' or sys.argv[1]=='-h':
 
     # This prints out a sample of how you might use this command
     print("usage:",sys.argv[0], '--help')
-    print("-p or --play + file directory: Play a File")
+    print("-p or --play + file directory(s) seperated by a space: Play Audio File(s)")
     print("-c or --count: Count the number of arguments in a command")
 
     # Note that it is proper hygiene to have this at the end of each
@@ -72,11 +72,12 @@ def playAudio(filePath):
     play_obj = wave_obj.play()
     play_obj.wait_done()  # Wait until sound has finished playing
 # TODO: Add in the play command by writing a new if statement
-if sys.argv[1] == '-p' or sys.argv[1] == "--play":
-    print("I am now playing " + sys.argv[2])
-    playAudio(str(sys.argv[2]))
+if sys.argv[1] == '-p' or sys.argv[1] == "--play ":
+    sys_argv_length = len(sys.argv)
+    for i in range(2,sys_argv_length): # assumes that user will seperate directories with a space
+        print("I am now playing " + sys.argv[i])
+        playAudio(str(sys.argv[i]))
     sys.exit(0)
-    
 '''
 You can use count as a template/example.
 For now, it doesn't have to actually play a file, but it should take in a filepath as an additional argument

@@ -14,9 +14,13 @@ So far, we have been working on getting our project set up.  We have worked on
 creating a reproducable development environment as well as discussing how we will
 manage work.
 
-We changed `cli_example.py` so that it plays every file passed to it in sequence.
+We changed `cli_example.py` so that it plays every file passed to it.
+By default, they are played in sequence. However, you can play them simultaneously
+by specifying `-p` or `--parallel`.
 For example `python cli_example.py mysound1.wav mysound2.wav` would play 
 `mysound1.wav` followed by `mysound2.wav`.
+`python cli_example.py mysound1.wav mysound2.wav` would play 
+`mysound1.wav` and `mysound2.wav` simultaneously.
 
 We used `argparse` to parse arguments.  While it probably makes this simple
 example more complicated, it will hopefully make extending a CLI easier if we

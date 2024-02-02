@@ -1,5 +1,27 @@
 # Johns-Frends
 
+* Andrew Tate
+
+* John Leeds
+
+* Luke Samuels
+
+* Rhys Sorenson-Graff
+
+# Current Progress:
+
+So far, we have been working on getting our project set up.  We have worked on
+creating a reproducable development environment as well as discussing how we will
+manage work.
+
+We changed `cli_example.py` so that it plays every file passed to it in sequence.
+For example `python cli_example.py mysound1.wav mysound2.wav` would play 
+`mysound1.wav` followed by `mysound2.wav`.
+
+We used `argparse` to parse arguments.  While it probably makes this simple
+example more complicated, it will hopefully make extending a CLI easier if we
+choose to do so.
+
 # Installation:
 
 * Create a virtual environment with `python3.11 -m venv venv`

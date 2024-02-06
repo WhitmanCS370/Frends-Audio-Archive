@@ -1,18 +1,6 @@
 import argparse
+import commands
 import pathlib
-import simpleaudio as sa
-
-
-def playAudio(filename):
-    wave_obj = sa.WaveObject.from_wave_file(filename)
-    play_obj = wave_obj.play()
-    play_obj.wait_done()  # Wait until sound has finished playing
-
-
-def playAudioAsync(filename):
-    wave_obj = sa.WaveObject.from_wave_file(filename)
-    play_obj = wave_obj.play()
-    return play_obj
 
 
 def main():
@@ -31,14 +19,9 @@ def main():
     args = parser.parse_args()
 
     if args.parallel:
-        play_objs = []
-        for fname in args.audio_files:
-            play_objs.append(playAudioAsync(str(fname)))
-        for play_obj in play_objs:
-            play_obj.wait_done()
+        commands.playParallel([str(fname) for fname in args.audio_files])
     else:
-        for fname in args.audio_files:
-            playAudio(str(fname))
+        commands.playSequence([str(fname) for fname in args.audio_files])
 
 
 if __name__ == "__main__":

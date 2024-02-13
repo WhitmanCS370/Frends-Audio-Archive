@@ -8,6 +8,10 @@
 
 * Rhys Sorenson-Graff
 
+# Usage:
+
+There are currently three commands (play, list, and rename).  Run `python cli.py --help` for more information.
+
 # Current Progress:
 
 So far, we have been working on getting our project set up.  We have worked on

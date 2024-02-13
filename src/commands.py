@@ -1,3 +1,4 @@
+import os
 import simpleaudio as sa
 
 
@@ -24,3 +25,13 @@ def playParallel(filenames):
         play_objs.append(playAudioAsync(str(fname)))
     for play_obj in play_objs:
         play_obj.wait_done()
+
+
+def getSounds():
+    return os.listdir("./sounds")
+
+
+def rename(filename, new_name):
+    if new_name[-4:] != ".wav":
+        new_name += ".wav"
+    os.rename(filename, new_name)

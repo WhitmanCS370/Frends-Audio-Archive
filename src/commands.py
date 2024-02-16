@@ -27,11 +27,11 @@ def playParallel(filenames):
         play_obj.wait_done()
 
 
-def getSounds():
-    return os.listdir("./sounds")
+def getSounds(dir="sounds/"):
+    return os.listdir(dir)
 
 
 def rename(filename, new_name):
-    if new_name[-4:] != ".wav":
+    if len(new_name) < 4 or new_name[-4:] != ".wav":
         new_name += ".wav"
     os.rename(filename, new_name)

@@ -41,3 +41,9 @@ choose to do so.
 * Note: Deactivate the virtual environment with `deactivate`.
 
 * Source: [Python Virtual Environments: A Primer](https://realpython.com/python-virtual-environments-a-primer)
+
+# Testing:
+
+Tests are written with the built in `unittest` library and can be executed with `python -m unittest`.
+Note that when creating new tests, the file must begin with `test_` in order for them to be discovered.
+

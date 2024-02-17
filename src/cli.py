@@ -15,8 +15,24 @@ play_parser.add_argument(
     "-p",
     "--parallel",
     action="store_true",
-    help="specify -p to play all files simultaneously",
+    help="play all files simultaneously",
 )
+
+play_parser.add_argument(
+    "-s", "--speed", type=float, help="float playback speed for audio (default: 1.0)"
+)
+
+play_parser.add_argument(
+    "-r", "--reverse", action="store_true", help="play the sounds in reverse"
+)
+
+play_parser.add_argument(
+    "-v",
+    "--volume",
+    type=float,
+    help="float playback volume for audio (default: 1.0)",
+)
+
 # nargs='+' means that we expect at least one argument
 play_parser.add_argument(
     "audio_files", type=pathlib.Path, nargs="+", help="audio files to play"
@@ -35,10 +51,12 @@ args = parser.parse_args()
 
 match args.command:
     case "play":
+        kwargs = {"speed": args.speed, "volume": args.volume, "reverse": args.reverse}
+        fnames = [str(fname) for fname in args.audio_files]
         if args.parallel:
-            commands.playParallel([str(fname) for fname in args.audio_files])
+            commands.playParallel(fnames, **kwargs)
         else:
-            commands.playSequence([str(fname) for fname in args.audio_files])
+            commands.playSequence(fnames, **kwargs)
     case "list":
         for sound in commands.getSounds():
             print(sound)

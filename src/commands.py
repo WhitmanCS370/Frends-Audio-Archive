@@ -2,6 +2,8 @@ import os
 import simpleaudio as sa
 import wave
 import numpy as np
+from pydub import speedup
+from pydub import AudioSegment
 
 
 def playAudio(filename, reverse=False, volume=None, speed=None):
@@ -60,3 +62,19 @@ def changeVolume(filename, volume):
     wave_obj = sa.WaveObject(audio_data.tobytes(), bytes_per_sample=sample_width, sample_rate=sample_rate)
 
     return wave_obj
+
+"""
+Instead of editing it at play, I switched it to directly change the speed 
+of the file. This way it can just be its own argument and we don't have to worry about
+dynamically creating and deleting audio files
+"""
+def speedChange(file, speed = 1):
+    audio = AudioSegment.from_file(file)
+    if speed > 1:
+        audio = speedup(audio, playback_speed=speed)
+    else:
+        audio = audio._spawn(audio.raw_data, overrides={
+         "frame_rate": int(audio.frame_rate * speed)
+         })
+    audio.export(file, format = 'wav')
+    return

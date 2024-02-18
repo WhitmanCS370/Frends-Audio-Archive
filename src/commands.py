@@ -1,23 +1,28 @@
-import os
-import simpleaudio as sa
-import wave
-import numpy as np
 import audioop
+import os
+from pydub import AudioSegment
+from pydub.effects import speedup
+import simpleaudio as sa
+import tempfile
+import wave
 
 
 def playAudio(filename, reverse=False, volume=None, speed=None):
-    wave_obj = sa.WaveObject.from_wave_file(filename)
+    with wave.open(filename, "rb") as wave_read:
+        audio_data = wave_read.readframes(wave_read.getnframes())
+        num_channels = wave_read.getnchannels()
+        bytes_per_sample = wave_read.getsampwidth()
+        sample_rate = wave_read.getframerate()
+
     if reverse:
-        audio_data = np.array(wave_obj.audio_data)
-        wave_obj = sa.WaveObject(audioop.reverse(audio_data, int(wave_obj.bytes_per_sample)), wave_obj.num_channels, wave_obj.bytes_per_sample, wave_obj.sample_rate)
-
-    if volume is not None:
-        wave_obj = changeVolume(filename, volume)
-
+        audio_data = audioop.reverse(audio_data, bytes_per_sample)
+    if volume is not None and volume >= 0:
+        audio_data = audioop.mul(audio_data, bytes_per_sample, volume)
     if speed is not None and speed > 0:
-        raise NotImplementedError
-        # wave_obj = changeSpeed(wave_obj, speed)
-    
+        audio_data, num_channels, bytes_per_sample, sample_rate = changeSpeed(
+            audio_data, bytes_per_sample, sample_rate, num_channels, speed
+        )
+    wave_obj = sa.WaveObject(audio_data, num_channels, bytes_per_sample, sample_rate)
     play_obj = wave_obj.play()
     return play_obj
 
@@ -47,17 +52,36 @@ def rename(filename, new_name):
     if len(new_name) < 4 or new_name[-4:] != ".wav":
         new_name += ".wav"
     os.rename(filename, new_name)
-    
 
-def changeVolume(filename, volume): 
-    wave_read = wave.open(filename, 'rb')
-    sample_width = wave_read.getsampwidth()
-    sample_rate = wave_read.getframerate()
 
-    audio_data = np.frombuffer(wave_read.readframes(wave_read.getnframes()), dtype=np.int16)
-    audio_data = (audio_data * volume).astype(np.int16)
-    audio_data = np.clip(audio_data, -32768, 32767)
-
-    wave_obj = sa.WaveObject(audio_data.tobytes(), bytes_per_sample=sample_width, sample_rate=sample_rate)
-
-    return wave_obj
+def changeSpeed(audio_data, bytes_per_sample, sample_rate, num_channels, speed):
+    # source: https://stackoverflow.com/questions/74136596/how-do-i-change-the-speed-of-an-audio-file-in-python-like-in-audacity-without
+    audio = AudioSegment(
+        data=audio_data,
+        sample_width=bytes_per_sample,
+        frame_rate=sample_rate,
+        channels=num_channels,
+    )
+    if speed > 1:
+        audio = speedup(audio, playback_speed=speed)
+    else:
+        altered_audio = audio._spawn(
+            audio.raw_data, overrides={"frame_rate": int(audio.frame_rate * speed)}
+        )
+        audio = altered_audio.set_frame_rate(audio.frame_rate)
+    # i am sorry to anybody who stumbles upon this
+    # if we directly export this as a wav, it's somehow corrupted when we tried to read
+    # it back and play it.
+    # But, if we export it as a mp3, load it, export it as a wav, and then play that,
+    # everything works as intended
+    with tempfile.NamedTemporaryFile(suffix=".mp3") as mp3_file:
+        audio.export(mp3_file.name, format="mp3")
+        audio = AudioSegment.from_mp3(mp3_file.name)
+        with tempfile.NamedTemporaryFile(suffix=".wav") as wav_file:
+            audio.export(wav_file.name, format="wav")
+            with wave.open(wav_file.name, "rb") as wave_read:
+                audio_data = wave_read.readframes(wave_read.getnframes())
+                num_channels = wave_read.getnchannels()
+                bytes_per_sample = wave_read.getsampwidth()
+                sample_rate = wave_read.getframerate()
+    return audio_data, num_channels, bytes_per_sample, sample_rate

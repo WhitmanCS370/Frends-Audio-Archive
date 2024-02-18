@@ -2,13 +2,14 @@ import os
 import simpleaudio as sa
 import wave
 import numpy as np
+import audioop
 
 
 def playAudio(filename, reverse=False, volume=None, speed=None):
     wave_obj = sa.WaveObject.from_wave_file(filename)
     if reverse:
-        raise NotImplementedError
-        # wave_obj = reverseAudio(wave_obj)
+        audio_data = np.array(wave_obj.audio_data)
+        wave_obj = sa.WaveObject(audioop.reverse(audio_data, int(wave_obj.bytes_per_sample)), wave_obj.num_channels, wave_obj.bytes_per_sample, wave_obj.sample_rate)
 
     if volume is not None:
         wave_obj = changeVolume(filename, volume)

@@ -6,6 +6,7 @@ from src.commands import *
 class BasicTests(unittest.TestCase):
     # copy the test_sounds directory so that way we can modify it without worry
     def setUp(self):
+        self.commander = Commander()
         self.dir = "test/test_sounds_copy/"
         shutil.copytree("test/test_sounds", self.dir)
 
@@ -14,7 +15,7 @@ class BasicTests(unittest.TestCase):
 
     def test_getSounds(self):
         # sort the sounds so the order is always the same
-        sounds = sorted(getSounds(self.dir))
+        sounds = sorted(self.commander.getSounds(self.dir))
         self.assertListEqual(
             sounds,
             [
@@ -33,9 +34,9 @@ class BasicTests(unittest.TestCase):
 
     def test_rename(self):
         # new_sound should have ".wav" appended to it
-        rename(f"{self.dir}coffee-slurp-2.wav", f"{self.dir}new_sound")
-        rename(f"{self.dir}coffee-slurp-3.wav", f"{self.dir}other_sound.wav")
-        sounds = sorted(getSounds(self.dir))
+        self.commander.rename(f"{self.dir}coffee-slurp-2.wav", f"{self.dir}new_sound")
+        self.commander.rename(f"{self.dir}coffee-slurp-3.wav", f"{self.dir}other_sound.wav")
+        sounds = sorted(self.commander.getSounds(self.dir))
         self.assertListEqual(
             sounds,
             [

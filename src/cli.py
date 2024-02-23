@@ -77,6 +77,7 @@ class Cli:
             case "rename":
                 self.commander.rename(str(args.filename), str(args.new_name))
 
+
 if __name__ == "__main__":
     commander = commands.Commander()
     cli = Cli(commander)

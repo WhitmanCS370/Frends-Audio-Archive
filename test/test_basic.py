@@ -35,7 +35,9 @@ class BasicTests(unittest.TestCase):
     def test_rename(self):
         # new_sound should have ".wav" appended to it
         self.commander.rename(f"{self.dir}coffee-slurp-2.wav", f"{self.dir}new_sound")
-        self.commander.rename(f"{self.dir}coffee-slurp-3.wav", f"{self.dir}other_sound.wav")
+        self.commander.rename(
+            f"{self.dir}coffee-slurp-3.wav", f"{self.dir}other_sound.wav"
+        )
         sounds = sorted(self.commander.getSounds(self.dir))
         self.assertListEqual(
             sounds,

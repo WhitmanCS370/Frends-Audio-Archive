@@ -8,14 +8,8 @@ import wave
 
 
 class Commander:
-    def __init__(self, storage):
-        self.storage = storage
-
-    def playAudio(self, name, reverse=False, volume=None, speed=None):
-        # audio = self.storage.get(name)
-        # filepath = audio.filepath
-        filepath = self.storage.get(name)
-        with wave.open(filepath, "rb") as wave_read:
+    def playAudio(self, filename, reverse=False, volume=None, speed=None):
+        with wave.open(filename, "rb") as wave_read:
             audio_data = wave_read.readframes(wave_read.getnframes())
             num_channels = wave_read.getnchannels()
             bytes_per_sample = wave_read.getsampwidth()
@@ -26,7 +20,7 @@ class Commander:
         if volume is not None and volume >= 0:
             audio_data = audioop.mul(audio_data, bytes_per_sample, volume)
         if speed is not None and speed > 0:
-            audio_data, num_channels, bytes_per_sample, sample_rate = self.changeSpeed(
+            audio_data, num_channels, bytes_per_sample, sample_rate = changeSpeed(
                 audio_data, bytes_per_sample, sample_rate, num_channels, speed
             )
         wave_obj = sa.WaveObject(
@@ -35,27 +29,29 @@ class Commander:
         play_obj = wave_obj.play()
         return play_obj
 
-    def playAudioWait(self, name, reverse=False, volume=None, speed=None):
-        self.playAudio(name, reverse=reverse, volume=volume, speed=speed).wait_done()
+    def playAudioWait(self, filename, reverse=False, volume=None, speed=None):
+        playAudio(filename, reverse=reverse, volume=volume, speed=speed).wait_done()
 
-    def playSequence(self, names, reverse=False, volume=None, speed=None):
-        for name in names:
-            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed)
+    def playSequence(self, filenames, reverse=False, volume=None, speed=None):
+        for fname in filenames:
+            playAudioWait(fname, reverse=reverse, volume=volume, speed=speed)
 
-    def playParallel(self, names, reverse=False, volume=None, speed=None):
+    def playParallel(self, filenames, reverse=False, volume=None, speed=None):
         play_objs = []
-        for name in names:
+        for fname in filenames:
             play_objs.append(
-                self.playAudio(name, reverse=reverse, volume=volume, speed=speed)
+                playAudio(fname, reverse=reverse, volume=volume, speed=speed)
             )
         for play_obj in play_objs:
             play_obj.wait_done()
 
-    def getSounds(self):
-        return self.storage.get_all()
+    def getSounds(self, dir="sounds/"):
+        return os.listdir(dir)
 
-    def rename(self, old_name, new_name):
-        self.storage.rename(old_name, new_name)
+    def rename(self, filename, new_name):
+        if len(new_name) < 4 or new_name[-4:] != ".wav":
+            new_name += ".wav"
+        os.rename(filename, new_name)
 
     def changeSpeed(
         self, audio_data, bytes_per_sample, sample_rate, num_channels, speed

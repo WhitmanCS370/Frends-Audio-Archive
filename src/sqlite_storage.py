@@ -1,6 +1,4 @@
-from pathlib import Path
 import sqlite3
-import time
 
 
 def _manage_connection(f):
@@ -19,15 +17,7 @@ class Sqlite:
         self.db_name = db_name
 
     @_manage_connection
-    def add_sound(self, con, cur, file_path, name=None, author=None):
-        path = Path(file_path)
-        if not path.is_file():
-            raise FileNotFoundError()
-        if name is None:
-            # convert file_path to name of file without extension
-            name = path.stem
-        duration = 10
-        cur_time = int(time.time())
+    def add_sound(self, con, cur, file_path, name, duration, cur_time, author=None):
         query = """INSERT INTO sounds (file_path, name, duration, date_added, last_accessed, author)
         VALUES (?, ?, ?, ?, ?, ?);"""
         cur.execute(query, (file_path, name, duration, cur_time, cur_time, author))

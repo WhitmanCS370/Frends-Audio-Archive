@@ -1,5 +1,4 @@
 import audioop
-import os
 from pydub import AudioSegment
 from pydub.effects import speedup
 import simpleaudio as sa
@@ -12,9 +11,8 @@ class Commander:
         self.storage = storage
 
     def playAudio(self, name, reverse=False, volume=None, speed=None):
-        # audio = self.storage.get(name)
-        # filepath = audio.filepath
-        filepath = self.storage.get(name)
+        audio = self.storage.getByName(name)
+        filepath = audio.filepath
         with wave.open(filepath, "rb") as wave_read:
             audio_data = wave_read.readframes(wave_read.getnframes())
             num_channels = wave_read.getnchannels()

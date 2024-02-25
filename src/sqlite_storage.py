@@ -3,7 +3,6 @@ import sqlite3
 import time
 
 
-
 def _manage_connection(f):
     def new_f(self, *args, **kwargs):
         con = sqlite3.connect(self.db_name)
@@ -11,12 +10,13 @@ def _manage_connection(f):
         res = f(self, con, cur, *args, **kwargs)
         con.close()
         return res
+
     return new_f
+
 
 class Sqlite:
     def __init__(self, db_name="audio_archive.db"):
         self.db_name = db_name
-
 
     @_manage_connection
     def add_sound(self, con, cur, file_path, name=None, author=None):
@@ -36,7 +36,8 @@ class Sqlite:
     @_manage_connection
     def get(self, _con, cur, name):
         res = cur.execute("SELECT * FROM sounds WHERE name = ?;", (name,))
-        return res.fetchone()
+        data = res.fetchone()
+        return AudioObject(data[0], data[1], data[2])
 
     @_manage_connection
     def get_all(self, _con, cur):

@@ -1,12 +1,14 @@
 from pathlib import Path
+from shutil import copyfile, move
 import time
 import wave
 
 
 class StorageCommander:
-    def __init__(self, cache, database):
+    def __init__(self, cache, database, base_directory="sounds/"):
         self.cache = cache
         self.database = database
+        self.base_directory = Path(base_directory)
 
     def addSound(self, file_path, name=None, author=None):
         path = Path(file_path)
@@ -15,10 +17,18 @@ class StorageCommander:
         if name is None:
             # convert file_path to name of file without extension
             name = path.stem
-        with wave.open(file_path, "rb") as wave_read:
+        new_path = self.base_directory / f"{name}.wav"
+        if new_path != path:
+            # copy file if we're adding it from outside sounds/
+            if path.parent != self.base_directory:
+                copyfile(path, new_path)
+            else:  # if it's already in the sounds/ directory, move the file
+                move(path, new_path)
+
+        with wave.open(str(new_path), "rb") as wave_read:
             duration = int(wave_read.getnframes() / wave_read.getframerate())
         cur_time = int(time.time())
-        self.database.addSound(file_path, name, duration, cur_time, author)
+        self.database.addSound(str(new_path), name, duration, cur_time, author)
         audio = self.getByName(name)
         self.cache.cache(audio)
 

@@ -44,9 +44,10 @@ class AudioMetadata:
             self.duration = int(wave_read.getnframes() / wave_read.getframerate())
 
     def updateLastAccessed(self):
-        self.last_accessed = time.time()
+        self.last_accessed = int(time.time())
 
     def __str__(self):
+        res = []
         for val, name in zip(
             [
                 self.file_path,
@@ -55,7 +56,6 @@ class AudioMetadata:
                 self.date_added,
                 self.author,
                 self.last_accessed,
-                self.tags,
             ],
             [
                 "file path",
@@ -64,7 +64,8 @@ class AudioMetadata:
                 "date added",
                 "author",
                 "last accessed",
-                "tags",
             ],
         ):
-            print(f"{name}: {val}")
+            res.append(f"{name}: {val}")
+        res.append(f"tags: {', '.join(self.tags)}")
+        return "\n".join(res)

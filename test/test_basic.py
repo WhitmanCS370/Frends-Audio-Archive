@@ -1,8 +1,35 @@
 import os
 import unittest
-from src.sqlite_init import *
-from src.sqlite_storage import *
 from src.commands import *
+from src.sqlite_init import *
+from src.sqlite_storage import Sqlite
+from src.storage_commander import StorageCommander
+
+
+class DummyCache:
+    def __init__(self):
+        pass
+
+    def addSound(self, file_path, name=None, author=None):
+        return
+
+    def getByName(self, name):
+        return
+
+    def getByTags(self, tags):
+        return
+
+    def rename(self, old_name, new_name):
+        return
+
+    def addTag(self, name, tag):
+        return
+
+    def removeTag(self, name, tag):
+        return
+
+    def cache(self, _):
+        return
 
 
 class BasicTests(unittest.TestCase):
@@ -10,37 +37,36 @@ class BasicTests(unittest.TestCase):
     def setUp(self):
         self.db_name = "test/test_audio_archive.db"
         create_db(self.db_name)
-        storage = Sqlite(self.db_name)
+        storage = StorageCommander(DummyCache(), Sqlite(self.db_name))
         self.commander = Commander(storage)
         for fname in os.listdir("test/test_sounds"):
-            storage.add_sound(f"test/test_sounds/{fname}")
+            self.commander.addSound(f"test/test_sounds/{fname}")
 
     def tearDown(self):
         os.remove(self.db_name)
-        # shutil.rmtree(self.db_name)
 
     def test_getSounds(self):
         # sort the sounds so the order is always the same
-        sounds = sorted([sound[1] for sound in self.commander.getSounds()])
+        sounds = sorted([sound.name for sound in self.commander.getSounds()])
         self.assertListEqual(
             sounds,
             [
-                "test/test_sounds/coffee-slurp-2.wav",
-                "test/test_sounds/coffee-slurp-3.wav",
-                "test/test_sounds/coffee-slurp-4.wav",
-                "test/test_sounds/coffee-slurp-5.wav",
-                "test/test_sounds/coffee-slurp-6.wav",
-                "test/test_sounds/coffee-slurp-7.wav",
-                "test/test_sounds/coffee-slurp-8.wav",
-                "test/test_sounds/coffee.wav",
-                "test/test_sounds/toaster-2.wav",
-                "test/test_sounds/toaster.wav",
+                "coffee",
+                "coffee-slurp-2",
+                "coffee-slurp-3",
+                "coffee-slurp-4",
+                "coffee-slurp-5",
+                "coffee-slurp-6",
+                "coffee-slurp-7",
+                "coffee-slurp-8",
+                "toaster",
+                "toaster-2",
             ],
         )
 
     def test_rename(self):
         self.commander.rename("coffee-slurp-2", "a_new_name")
-        names = sorted([sound[2] for sound in self.commander.getSounds()])
+        names = sorted([sound.name for sound in self.commander.getSounds()])
         self.assertEqual(
             names,
             [

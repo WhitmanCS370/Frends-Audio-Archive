@@ -1,5 +1,5 @@
-from scipy.io import wavfile
 import time
+import wave
 
 
 class AudioMetadata:
@@ -8,7 +8,7 @@ class AudioMetadata:
     """
 
     def __init__(self, **kwargs):
-        self.location = kwargs["filePath"]
+        self.file_path = kwargs["filePath"]
         self.name = kwargs["name"]
         self.duration = kwargs["duration"]
         self.date_added = kwargs["dateAdded"]
@@ -40,19 +40,31 @@ class AudioMetadata:
 
     def setDuration(self):
         # get the duration
-
-        sample_rate, data = wavfile.read(self.location)
-        len_data = len(data)
-        self.duration = len_data / sample_rate
+        with wave.open(self.file_path, "rb") as wave_read:
+            self.duration = int(wave_read.getnframes() / wave_read.getframerate())
 
     def updateLastAccessed(self):
         self.last_accessed = time.time()
 
-    def testAttributes(self):
-        print(self.location)
-        print(self.name)
-        print(self.duration)
-        print(self.date_added)
-        print(self.last_accessed)
-        print(self.author)
-        print(self.tags)
+    def __str__(self):
+        for val, name in zip(
+            [
+                self.file_path,
+                self.name,
+                self.duration,
+                self.date_added,
+                self.author,
+                self.last_accessed,
+                self.tags,
+            ],
+            [
+                "file path",
+                "name",
+                "duration",
+                "date added",
+                "author",
+                "last accessed",
+                "tags",
+            ],
+        ):
+            print(f"{name}: {val}")

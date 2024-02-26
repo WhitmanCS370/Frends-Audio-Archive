@@ -1,5 +1,5 @@
 import sqlite3
-from .audio_metadata import AudioMetadata
+from audio_metadata import AudioMetadata
 
 
 def _manage_connection(f):

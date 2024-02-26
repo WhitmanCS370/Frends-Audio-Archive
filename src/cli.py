@@ -1,6 +1,9 @@
 import argparse
-import commands
 import pathlib
+from dummy_cache import DummyCache
+import commands
+from sqlite_storage import Sqlite
+from storage_commander import StorageCommander
 
 
 class Cli:
@@ -44,6 +47,14 @@ class Cli:
             "audio_files", type=pathlib.Path, nargs="+", help="audio files to play"
         )
 
+        add_parser = subparsers.add_parser(
+            "add", description="Add files to audio archive"
+        )
+        add_parser.add_argument("filename", type=pathlib.Path, help="file to add")
+        add_parser.add_argument(
+            "-n", "--name", type=str, help="name of sound", default=None
+        )
+
         list_parser = subparsers.add_parser(
             "list", description="Show files in audio archive"
         )
@@ -51,9 +62,9 @@ class Cli:
         rename_parser = subparsers.add_parser(
             "rename", description="Rename file in audio archive"
         )
-        rename_parser.add_argument("filename", type=pathlib.Path, help="File to rename")
+        rename_parser.add_argument("filename", type=pathlib.Path, help="file to rename")
         rename_parser.add_argument(
-            "new_name", type=pathlib.Path, help="New name for file"
+            "new_name", type=pathlib.Path, help="new name for file"
         )
 
     def execute_command(self):
@@ -76,9 +87,12 @@ class Cli:
                     print(sound)
             case "rename":
                 self.commander.rename(str(args.filename), str(args.new_name))
+            case "add":
+                self.commander.addSound(args.filename, args.name)
 
 
 if __name__ == "__main__":
-    commander = commands.Commander()
+    storage = StorageCommander(DummyCache(), Sqlite())
+    commander = commands.Commander(storage)
     cli = Cli(commander)
     cli.execute_command()

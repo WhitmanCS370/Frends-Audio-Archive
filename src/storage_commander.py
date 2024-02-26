@@ -18,7 +18,7 @@ class StorageCommander:
         with wave.open(file_path, "rb") as wave_read:
             duration = int(wave_read.getnframes() / wave_read.getframerate())
         cur_time = int(time.time())
-        self.database.add_sound(file_path, name, duration, cur_time, author)
+        self.database.addSound(file_path, name, duration, cur_time, author)
         audio = self.getByName(name)
         self.cache.cache(audio)
 
@@ -37,9 +37,8 @@ class StorageCommander:
         for audio in audios:
             self.cache.cache(audio)
 
-    def getSounds(self):
-        # skip cache
-        pass
+    def getAll(self):
+        return self.database.getAll()
 
     def rename(self, old_name, new_name):
         self.database.rename(old_name, new_name)

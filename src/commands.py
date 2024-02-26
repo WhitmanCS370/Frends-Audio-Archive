@@ -50,10 +50,13 @@ class Commander:
             play_obj.wait_done()
 
     def getSounds(self):
-        return self.storage.get_all()
+        return self.storage.getAll()
 
     def rename(self, old_name, new_name):
         self.storage.rename(old_name, new_name)
+
+    def addSound(self, file_path, name=None, author=None):
+        self.storage.addSound(file_path, name=name, author=author)
 
     def changeSpeed(
         self, audio_data, bytes_per_sample, sample_rate, num_channels, speed

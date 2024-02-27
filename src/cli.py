@@ -1,7 +1,7 @@
 import argparse
 import pathlib
 from dummy_cache import DummyCache
-import commands
+from commands import *
 from sqlite_storage import Sqlite
 from storage_commander import StorageCommander
 
@@ -93,6 +93,6 @@ class Cli:
 
 if __name__ == "__main__":
     storage = StorageCommander(DummyCache(), Sqlite())
-    commander = commands.Commander(storage)
+    commander = Commander(storage)
     cli = Cli(commander)
     cli.execute_command()

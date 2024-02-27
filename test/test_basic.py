@@ -1,5 +1,6 @@
 import os
 import unittest
+from src.sqlite_init import create_db
 from src.commands import *
 from src.sqlite_init import *
 from src.sqlite_storage import Sqlite

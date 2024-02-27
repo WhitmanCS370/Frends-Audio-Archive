@@ -53,9 +53,9 @@ class AudioMetadata:
                 self.file_path,
                 self.name,
                 self.duration,
-                self.date_added,
+                time.strftime("%c", time.localtime(self.date_added)),
                 self.author,
-                self.last_accessed,
+                time.strftime("%c", time.localtime(self.last_accessed)),
             ],
             [
                 "file path",
@@ -68,4 +68,4 @@ class AudioMetadata:
         ):
             res.append(f"{name}: {val}")
         res.append(f"tags: {', '.join(self.tags)}")
-        return "\n".join(res)
+        return ("\n".join(res)) + "\n"

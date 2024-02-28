@@ -19,26 +19,34 @@ class Sqlite:
 
     @_manage_connection
     def addSound(self, con, cur, file_path, name, duration, cur_time, author=None):
+        print(f"THE AUTHOR IS {author}")
         query = """INSERT INTO sounds (file_path, name, duration, date_added, last_accessed, author)
         VALUES (?, ?, ?, ?, ?, ?);"""
         cur.execute(query, (file_path, name, duration, cur_time, cur_time, author))
         con.commit()
 
     @_manage_connection
+    def removeByName(self, con, cur, name):
+        query = "DELETE FROM sounds WHERE name = ?;"
+        cur.execute(query, (name,))
+        con.commit()
+
+    @_manage_connection
     def getByName(self, _con, cur, name):
         res = cur.execute("SELECT * FROM sounds WHERE name = ?;", (name,))
         data = res.fetchone()
-        self._recordToAudioMetadata(data)
+        if data is None:
+            return None
+        return self._recordToAudioMetadata(data)
 
     @_manage_connection
     def getByTags(self, _con, cur, tags):
-        sound_ids = cur.execute(
-            "SELECT sound_id FROM tags WHERE tag IN ?;", (tags,)
-        ).fetchall()
-        sound_ids = [s[0] for s in sound_ids]
-        sounds = cur.execute(
-            "SELECT * FROM sounds WHERE id IN ?;", (sound_ids,)
-        ).fetchall()
+        tags = ", ".join(tags)
+        query = """SELECT id, file_path, name, duration, date_added, last_accessed, author
+        FROM sounds s
+        LEFT JOIN tags t ON s.id = t.sound_id
+        WHERE t.tag IN (?);"""
+        sounds = cur.execute(query, (tags,)).fetchall()
         return [self._recordToAudioMetadata(row) for row in sounds]
 
     @_manage_connection
@@ -47,11 +55,11 @@ class Sqlite:
         return [self._recordToAudioMetadata(row) for row in res]
 
     @_manage_connection
-    def rename(self, con, cur, old_name, new_name):
+    def rename(self, con, cur, old_name, new_name, new_path):
         query = """UPDATE sounds
-        SET name = ?
+        SET name = ?, file_path = ?
         WHERE name = ?;"""
-        cur.execute(query, (new_name, old_name))
+        cur.execute(query, (new_name, new_path, old_name))
         con.commit()
 
     @_manage_connection
@@ -75,9 +83,9 @@ class Sqlite:
 
     @_manage_connection
     def _getSoundID(self, _con, cur, name):
-        return cur.execute(
-            "SELECT sound_id FROM sounds WHERE name = ?", (name,)
-        ).fetchone()[0]
+        return cur.execute("SELECT id FROM sounds WHERE name = ?", (name,)).fetchone()[
+            0
+        ]
 
     def _recordToAudioMetadata(self, record):
         tags = self._getTags(record[0])
@@ -86,6 +94,7 @@ class Sqlite:
             name=record[2],
             duration=record[3],
             dateAdded=record[4],
-            author=record[5],
+            lastAccessed=record[5],
+            author=record[6],
             tags=tags,
         )

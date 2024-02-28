@@ -18,12 +18,6 @@
 
 * Rhys Sorenson-Graff: Rhys researched and contributed conversion of `.wav` files to numpy arrays. This is how we originally intended to handle audio modifications before discovering the built in `audioop` library.
 
-## Usage:
-
-There are currently three commands (`play`, `list`, and `rename`).  Run `python cli.py --help` for more information.
-
-By default, `play` plays every sound passed to it back to back.  There are several optional flags such as `-p`, which plays all sounds simultaneously, `-s [FLOAT]`, which changes the speed of the sounds, `-v [FLOAT]`, which changes the volume of the sounds, and `-r` which plays the sounds backwards.
-
 ## Installation:
 
 * Create a virtual environment with `python3.11 -m venv venv`
@@ -36,11 +30,25 @@ By default, `play` plays every sound passed to it back to back.  There are sever
 
 * Source: [Python Virtual Environments: A Primer](https://realpython.com/python-virtual-environments-a-primer)
 
+## Getting Started:
+
+* First, initialize the database by running `python src/sqlite_init.py`
+
+* From here, you can add whatever sounds you want with `python src/cli.py add [path to sound] [name (optional)]`
+
+* Once you have added sounds to the archive, you can play them with `python src/cli.py play [name]`
+
+* You can optionally specify audio effects to apply such as reversing the sound, changing the volume, changing the speed, or playing multiple sounds in parallel
+
+* Other commands: `rename`, `list`, `remove`
+
+* For more information, run `python src/cli.py -h` or `python src/cli.py [command] -h`
+
 ## Testing:
 
 Tests are written with the built in `unittest` library and can be executed with `python -m unittest`.
 
-Currently, only `list` and `rename` have unit tests as this is the only functionality that does not involve audio.  In our tests, the `test/sounds` directory is duplicated so that it can be modified without breaking future tests.
+Our automatic tests are located in the `tests/` directory, and we have written tests for as many of our commands as possible.  There are tests for adding, renaming, and removing sounds as well as tests for adding and removing tags.
 
 Our audio functions are all tested manually.
 

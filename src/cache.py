@@ -52,6 +52,9 @@ class Cache:
         soundObj.updateLastAccessed()
         return "object cached"
 
+    def removeByName(self, name):
+        raise NotImplementedError
+
     # This should be called before a name change of an audio object
     def rename(self, name, newName):
         if name in self.cache:

@@ -12,8 +12,8 @@ class Commander:
 
     def playAudio(self, name, reverse=False, volume=None, speed=None):
         audio = self.storage.getByName(name)
-        filepath = audio.filepath
-        with wave.open(filepath, "rb") as wave_read:
+        file_path = audio.file_path
+        with wave.open(file_path, "rb") as wave_read:
             audio_data = wave_read.readframes(wave_read.getnframes())
             num_channels = wave_read.getnchannels()
             bytes_per_sample = wave_read.getsampwidth()
@@ -53,10 +53,21 @@ class Commander:
         return self.storage.getAll()
 
     def rename(self, old_name, new_name):
-        self.storage.rename(old_name, new_name)
+        return self.storage.rename(old_name, new_name)
 
+    # returns true if the sound is successfully added
     def addSound(self, file_path, name=None, author=None):
-        self.storage.addSound(file_path, name=name, author=author)
+        return self.storage.addSound(file_path, name=name, author=author)
+
+    # returns true if the sound is successfully removed
+    def removeSound(self, name):
+        return self.storage.removeSound(name)
+
+    def addTag(self, name, tag):
+        return self.storage.addTag(name, tag)
+
+    def removeTag(self, name, tag):
+        return self.storage.removeTag(name, tag)
 
     def changeSpeed(
         self, audio_data, bytes_per_sample, sample_rate, num_channels, speed

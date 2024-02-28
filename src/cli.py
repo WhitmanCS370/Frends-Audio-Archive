@@ -21,7 +21,7 @@ class Cli:
             "-p",
             "--parallel",
             action="store_true",
-            help="play all files simultaneously",
+            help="play all sounds simultaneously",
         )
 
         play_parser.add_argument(
@@ -44,7 +44,7 @@ class Cli:
 
         # nargs='+' means that we expect at least one argument
         play_parser.add_argument(
-            "audio_files", type=pathlib.Path, nargs="+", help="audio files to play"
+            "names", type=str, nargs="+", help="names of sounds to play"
         )
 
         add_parser = subparsers.add_parser(
@@ -77,11 +77,10 @@ class Cli:
                     "volume": args.volume,
                     "reverse": args.reverse,
                 }
-                fnames = [str(fname) for fname in args.audio_files]
                 if args.parallel:
-                    self.commander.playParallel(fnames, **kwargs)
+                    self.commander.playParallel(args.names, **kwargs)
                 else:
-                    self.commander.playSequence(fnames, **kwargs)
+                    self.commander.playSequence(args.names, **kwargs)
             case "list":
                 for sound in self.commander.getSounds():
                     print(sound)

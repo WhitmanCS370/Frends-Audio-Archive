@@ -1,3 +1,4 @@
+from os.path import abspath
 import time
 import wave
 
@@ -8,7 +9,7 @@ class AudioMetadata:
     """
 
     def __init__(self, **kwargs):
-        self.file_path = kwargs["filePath"]
+        self.file_path = abspath(kwargs["filePath"])
         self.name = kwargs["name"]
         self.duration = kwargs["duration"]
         self.date_added = kwargs["dateAdded"]

@@ -3,7 +3,10 @@ class DummyCache:
         pass
 
     def addSound(self, file_path, name=None, author=None):
-        return
+        return True
+
+    def removeByName(self, name):
+        return True
 
     def getByName(self, name):
         return

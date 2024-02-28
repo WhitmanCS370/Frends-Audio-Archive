@@ -2,89 +2,99 @@ import sqlite3
 from audio_metadata import AudioMetadata
 
 
-def _manage_connection(f):
-    def new_f(self, *args, **kwargs):
-        con = sqlite3.connect(self.db_name)
-        cur = con.cursor()
-        res = f(self, con, cur, *args, **kwargs)
-        con.close()
-        return res
+"""Provide context manager for working with sqlite database"""
 
-    return new_f
+
+class SqliteManager:
+    def __init__(self, db_name):
+        self.db_name = db_name
+
+    def __enter__(self):
+        self.con = sqlite3.connect(self.db_name)
+        self.cur = self.con.cursor()
+        return self
+
+    def __exit__(self, *_args):
+        self.con.close()
 
 
 class Sqlite:
     def __init__(self, db_name="audio_archive.db"):
         self.db_name = db_name
 
-    @_manage_connection
-    def addSound(self, con, cur, file_path, name, duration, cur_time, author=None):
+    def addSound(self, file_path, name, duration, cur_time, author=None):
         query = """INSERT INTO sounds (file_path, name, duration, date_added, last_accessed, author)
         VALUES (?, ?, ?, ?, ?, ?);"""
-        cur.execute(query, (file_path, name, duration, cur_time, cur_time, author))
-        con.commit()
+        with SqliteManager(self.db_name) as m:
+            m.cur.execute(
+                query, (file_path, name, duration, cur_time, cur_time, author)
+            )
+            m.con.commit()
 
-    @_manage_connection
-    def removeByName(self, con, cur, name):
+    def removeByName(self, name):
         query = "DELETE FROM sounds WHERE name = ?;"
-        cur.execute(query, (name,))
-        con.commit()
+        with SqliteManager(self.db_name) as m:
+            m.cur.execute(query, (name,))
+            m.con.commit()
 
-    @_manage_connection
-    def getByName(self, _con, cur, name):
-        res = cur.execute("SELECT * FROM sounds WHERE name = ?;", (name,))
-        data = res.fetchone()
+    def getByName(self, name):
+        query = "SELECT * FROM sounds WHERE name = ?;"
+        with SqliteManager(self.db_name) as m:
+            res = m.cur.execute(query, (name,))
+            data = res.fetchone()
         if data is None:
             return None
         return self._recordToAudioMetadata(data)
 
-    @_manage_connection
-    def getByTags(self, _con, cur, tags):
+    def getByTags(self, tags):
         tags = ", ".join(tags)
         query = """SELECT id, file_path, name, duration, date_added, last_accessed, author
         FROM sounds s
         LEFT JOIN tags t ON s.id = t.sound_id
         WHERE t.tag IN (?);"""
-        sounds = cur.execute(query, (tags,)).fetchall()
+        with SqliteManager(self.db_name) as m:
+            sounds = m.cur.execute(query, (tags,)).fetchall()
         return [self._recordToAudioMetadata(row) for row in sounds]
 
-    @_manage_connection
-    def getAll(self, _con, cur):
-        res = cur.execute("SELECT * FROM sounds ORDER BY name;").fetchall()
+    def getAll(self):
+        query = "SELECT * FROM sounds ORDER BY name;"
+        with SqliteManager(self.db_name) as m:
+            res = m.cur.execute(query).fetchall()
         return [self._recordToAudioMetadata(row) for row in res]
 
-    @_manage_connection
-    def rename(self, con, cur, old_name, new_name, new_path):
+    def rename(self, old_name, new_name, new_path):
         query = """UPDATE sounds
         SET name = ?, file_path = ?
         WHERE name = ?;"""
-        cur.execute(query, (new_name, new_path, old_name))
-        con.commit()
+        with SqliteManager(self.db_name) as m:
+            m.cur.execute(query, (new_name, new_path, old_name))
+            m.con.commit()
 
-    @_manage_connection
-    def addTag(self, con, cur, name, tag):
+    def addTag(self, name, tag):
         sound_id = self._getSoundID(name)
         query = "INSERT INTO tags (tag, sound_id) VALUES (?, ?);"
-        cur.execute(query, (tag, sound_id))
-        con.commit()
+        with SqliteManager(self.db_name) as m:
+            m.cur.execute(query, (tag, sound_id))
+            m.con.commit()
 
-    @_manage_connection
-    def removeTag(self, con, cur, name, tag):
+    def removeTag(self, name, tag):
         sound_id = self._getSoundID(name)
         query = "DELETE FROM tags WHERE sound_id = ? AND tag = ?;"
-        cur.execute(query, (sound_id, tag))
-        con.commit()
+        with SqliteManager(self.db_name) as m:
+            m.cur.execute(query, (sound_id, tag))
+            m.con.commit()
 
-    @_manage_connection
-    def _getTags(self, _con, cur, id):
-        res = cur.execute("SELECT tag FROM tags WHERE sound_id = ?", (id,))
-        return [data[0] for data in res.fetchall()]
+    def _getTags(self, id):
+        query = "SELECT tag FROM tags WHERE sound_id = ?;"
+        with SqliteManager(self.db_name) as m:
+            res = m.cur.execute(query, (id,)).fetchall()
+        return [data[0] for data in res]
 
-    @_manage_connection
-    def _getSoundID(self, _con, cur, name):
-        return cur.execute("SELECT id FROM sounds WHERE name = ?", (name,)).fetchone()[
-            0
-        ]
+    def _getSoundID(self, name):
+        query = "SELECT id FROM sounds WHERE name = ?"
+        with SqliteManager(self.db_name) as m:
+            res = m.cur.execute(query, (name,)).fetchone()[0]
+        return res
 
     def _recordToAudioMetadata(self, record):
         tags = self._getTags(record[0])

@@ -139,6 +139,14 @@ class BasicTests(unittest.TestCase):
             },
         )
 
+    def test_clean(self):
+        addAllSounds(self.base_dir, self.commander)
+        # remove coffee.wav and toaster.wav and make sure that clean removes them
+        os.remove(os.path.join(self.base_dir, "coffee.wav"))
+        os.remove(os.path.join(self.base_dir, "toaster.wav"))
+        removed_sounds = {sound.name for sound in self.commander.clean()}
+        self.assertSetEqual(removed_sounds, {"coffee", "toaster"})
+
 
 if __name__ == "__main__":
     unittest.main()

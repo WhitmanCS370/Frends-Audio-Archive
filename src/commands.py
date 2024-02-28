@@ -7,6 +7,13 @@ import wave
 
 
 class Commander:
+    """Apply commands to audio archive
+
+    This class receives commands from an interface for the audio archive.
+    From here, it interacts with the storage and applies audio effects in order
+    to complete the desired action.
+    """
+
     def __init__(self, storage):
         self.storage = storage
 
@@ -68,6 +75,9 @@ class Commander:
 
     def removeTag(self, name, tag):
         return self.storage.removeTag(name, tag)
+
+    def clean(self):
+        return self.storage.clean()
 
     def changeSpeed(
         self, audio_data, bytes_per_sample, sample_rate, num_channels, speed

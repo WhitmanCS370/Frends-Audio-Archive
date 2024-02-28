@@ -19,6 +19,7 @@ class Sqlite:
 
     @_manage_connection
     def addSound(self, con, cur, file_path, name, duration, cur_time, author=None):
+        print(f"THE AUTHOR IS {author}")
         query = """INSERT INTO sounds (file_path, name, duration, date_added, last_accessed, author)
         VALUES (?, ?, ?, ?, ?, ?);"""
         cur.execute(query, (file_path, name, duration, cur_time, cur_time, author))
@@ -93,6 +94,7 @@ class Sqlite:
             name=record[2],
             duration=record[3],
             dateAdded=record[4],
-            author=record[5],
+            lastAccessed=record[5],
+            author=record[6],
             tags=tags,
         )

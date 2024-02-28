@@ -6,6 +6,14 @@ import wave
 
 
 class StorageCommander:
+    """Manage interactions with audio archive storage
+
+    This class exists because we are implementing caching to reduce database queries.
+    Both a cache and database object our provided during construction, and this class
+    handles dispatching commands to the appropriate storage mechanism, as well as
+    keeping the database, cache, and sounds directory in sync.
+    """
+
     def __init__(self, cache, database, base_directory="sounds/"):
         self.cache = cache
         self.database = database
@@ -88,3 +96,13 @@ class StorageCommander:
     def removeTag(self, name, tag):
         self.cache.removeTag(name, tag)
         self.database.removeTag(name, tag)
+
+    def clean(self):
+        sounds = self.getAll()
+        removed_sounds = []
+        for sound in sounds:
+            if not os.path.exists(sound.file_path):
+                self.removeSound(sound.name)
+                removed_sounds.append(sound)
+
+        return removed_sounds

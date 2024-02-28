@@ -67,6 +67,11 @@ class Cli:
             "new_name", type=pathlib.Path, help="new name for file"
         )
 
+        clean_parser = subparsers.add_parser(
+            "clean",
+            description="Remove all sounds from archive that do not have an associated file",
+        )
+
     def execute_command(self):
         args = self.parser.parse_args()
 
@@ -88,6 +93,8 @@ class Cli:
                 self.commander.rename(str(args.filename), str(args.new_name))
             case "add":
                 self.commander.addSound(args.filename, args.name)
+            case "clean":
+                self.commander.clean()
 
 
 if __name__ == "__main__":

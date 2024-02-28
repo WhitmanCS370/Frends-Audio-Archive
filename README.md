@@ -40,7 +40,7 @@
 
 * You can optionally specify audio effects to apply such as reversing the sound, changing the volume, changing the speed, or playing multiple sounds in parallel
 
-* Other commands: `rename`, `list`, `remove`
+* Other commands: `rename`, `list`, `remove`, `clean`
 
 * For more information, run `python src/cli.py -h` or `python src/cli.py [command] -h`
 

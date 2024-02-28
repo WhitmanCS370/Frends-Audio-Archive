@@ -2,10 +2,9 @@ import sqlite3
 from audio_metadata import AudioMetadata
 
 
-"""Provide context manager for working with sqlite database"""
-
-
 class SqliteManager:
+    """Provide context manager for working with sqlite database"""
+
     def __init__(self, db_name):
         self.db_name = db_name
 
@@ -19,6 +18,12 @@ class SqliteManager:
 
 
 class Sqlite:
+    """Interact with sqlite database for audio archive
+
+    Commands that directly interact with the database use the SqliteManager
+    context manager.
+    """
+
     def __init__(self, db_name="audio_archive.db"):
         self.db_name = db_name
 
@@ -85,6 +90,7 @@ class Sqlite:
             m.con.commit()
 
     def _getTags(self, id):
+        """returns tags associated with a sound id"""
         query = "SELECT tag FROM tags WHERE sound_id = ?;"
         with SqliteManager(self.db_name) as m:
             res = m.cur.execute(query, (id,)).fetchall()
@@ -97,6 +103,7 @@ class Sqlite:
         return res
 
     def _recordToAudioMetadata(self, record):
+        """converts one from the sounds table to an AudioMetadata object"""
         tags = self._getTags(record[0])
         return AudioMetadata(
             filePath=record[1],

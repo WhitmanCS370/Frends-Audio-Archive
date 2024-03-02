@@ -44,6 +44,8 @@
 
 * For more information, run `python src/cli.py -h` or `python src/cli.py [command] -h`
 
+* For more details on the technical design, see `design.md`
+
 ## Testing:
 
 Tests are written with the built in `unittest` library and can be executed with `python -m unittest`.

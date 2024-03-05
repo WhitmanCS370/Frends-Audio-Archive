@@ -20,27 +20,16 @@ class Cache:
         if name in self.cache:
             return self.cache[name]
         return None
-    
-    def getByTags(self, tags):
-        returnVals = []
-        for musicObj in self.cache.values():
-            numOfTagsMatched = 0
-            for tag in musicObj.tags:
-                if tag in tags:
-                    numOfTagsMatched += 1
-            if numOfTagsMatched == len(tags):
-                returnVals.append(musicObj)                    
-        return returnVals
         
-    def cache(self, soundObj):
+    def cacheData(self, soundObj):
         #check if object is already cached
-        if soundObj.title in self.cache:
+        if soundObj.name in self.cache:
             #update the time accessed and return early
             soundObj.updateLastAccessed()
             return "object already in cache"
-        if not self.isCachFull: #cache miss with a partially empty cache
+        if not self.isCacheFull(): #cache miss with a partially empty cache
             #add soundObj to cache
-            self.cache[soundObj.title] = soundObj
+            self.cache[soundObj.name] = soundObj
         else: #cache miss with a full cache
             #evict oldest sound
             titleToEvict = self.getOldestEntry()
@@ -59,16 +48,16 @@ class Cache:
         
     
     def isCacheFull(self):
-        if len(self.cache) <= self.maxCacheSize:
-            return True
-        return False
+        if len(self.cache) < self.maxCacheSize:
+            return False
+        return True
     
     def getOldestEntry(self):
-        oldest = random.choice(list(self.cache.items()))
-        for soundObj in self.cache:
-            if soundObj.last_accessed > oldest.last_accessed:
-                oldest = soundObj
-        return oldest
+        notNeeded, oldest = random.choice(list(self.cache.items()))
+        for name in self.cache:
+            if self.cache[name].last_accessed < oldest.last_accessed:
+                oldest = self.cache[name]
+        return oldest.name
             
 
         

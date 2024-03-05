@@ -1,4 +1,3 @@
-import shutil
 import unittest
 import sys
 sys.path.insert(1, '../src')
@@ -6,7 +5,6 @@ from cache import Cache
 import audio_metadata
 import os
 import pathlib
-import time
 
 #helper function that is needed to set up each cache test
 def getMetadataList():

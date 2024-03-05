@@ -44,7 +44,7 @@ class StorageCommander:
         cur_time = int(time.time())
         self.database.addSound(str(new_path), name, duration, cur_time, author)
         audio = self.getByName(name)
-        self.cache.cache(audio)
+        self.cache.cacheData(audio)
         return True
 
     # returns true if the sound is successfully removed
@@ -63,7 +63,7 @@ class StorageCommander:
         if audio is not None:
             return audio
         audio = self.database.getByName(name)
-        self.cache.cache(audio)
+        self.cache.cacheData(audio)
         return audio
 
     def getByTags(self, tags):
@@ -72,7 +72,7 @@ class StorageCommander:
             return audios
         audios = self.database.getByTags(tags)
         for audio in audios:
-            self.cache.cache(audio)
+            self.cache.cacheData(audio)
         return audios
 
     def getAll(self):

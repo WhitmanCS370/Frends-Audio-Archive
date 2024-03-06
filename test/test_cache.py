@@ -1,59 +1,65 @@
 import unittest
-import sys
-sys.path.insert(1, '../src')
-from cache import Cache
-import audio_metadata
+from src.cache import Cache
+from src.audio_metadata import AudioMetadata
 import os
 import pathlib
 
-#helper function that is needed to set up each cache test
+
+# helper function that is needed to set up each cache test
 def getMetadataList():
     soundObjs = []
+    # CR: that was a good idea to rename the sounds
     temp = 0
-    direct = pathlib.Path("test_sounds")
+    direct = pathlib.Path("test/test_sounds")
     for sound in os.listdir(direct):
         filename = os.fsdecode(sound)
-        if filename.endswith(".wav") or filename.endswith(".mp3"): 
-            filepath = os.path.join("test/test_sounds/", filename)            
-        tempSoundMetaData = audio_metadata.AudioMetadata(filePath = filepath,
-                                              name = str(temp),
-                                              duration = None,
-                                              dateAdded = None,
-                                              author = None,
-                                              tags = ["test"])
+        # CR: Why are we including mp3 files?
+        if filename.endswith(".wav") or filename.endswith(".mp3"):
+            filepath = os.path.join("test/test_sounds/", filename)
+        tempSoundMetaData = AudioMetadata(
+            filePath=filepath,
+            name=str(temp),
+            duration=None,
+            dateAdded=None,
+            author=None,
+            tags=["test"],
+        )
         soundObjs.append(tempSoundMetaData)
         temp += 1
     return soundObjs
-    
 
-class CacheTests(unittest.TestCase):    
+
+class CacheTests(unittest.TestCase):
     def test_setUpCache(self):
         tempCache = Cache(5)
         self.assertFalse(tempCache.isCacheFull())
-    
-    #should also account for testing for a standard cache hit
+
+    # should also account for testing for a standard cache hit
     def test_emptyCacheMiss(self):
         soundObjs = getMetadataList()
         tempCache = Cache(5)
         self.assertIsNone(tempCache.getByName("0"))
         tempCache.cacheData(soundObjs[0])
-        self.assertEqual(tempCache.getByName("0").name,
-                         "0")
-    
-    def test_fillCache(self):   
+        self.assertEqual(tempCache.getByName("0").name, "0")
+
+    def test_fillCache(self):
         soundObjs = getMetadataList()
         tempCache = Cache(5)
+        # CR: maybe
+        # for soundObj in soundObjs[:5]:
+        #     tempCache.cacheData(soundObj)
         tempCache.cacheData(soundObjs[0])
         tempCache.cacheData(soundObjs[1])
         tempCache.cacheData(soundObjs[2])
         tempCache.cacheData(soundObjs[3])
         tempCache.cacheData(soundObjs[4])
         self.assertTrue(tempCache.isCacheFull())
-    
-    #Testing for a full cache and checks to see if it evicts properly
+
+    # Testing for a full cache and checks to see if it evicts properly
     def test_cacheMissAndEvict(self):
         soundObjs = getMetadataList()
         tempCache = Cache(5)
+        # CR: same as above, maybe use a loop
         tempCache.cacheData(soundObjs[0])
         tempCache.cacheData(soundObjs[1])
         tempCache.cacheData(soundObjs[2])
@@ -61,31 +67,24 @@ class CacheTests(unittest.TestCase):
         tempCache.cacheData(soundObjs[4])
         self.assertIsNone(tempCache.getByName("5"))
         tempCache.cacheData(soundObjs[5])
-        self.assertEqual(tempCache.getByName("5").name,
-                         "5")
-     
-    #Fills the cache and evicts and checks to see if it evicts the correct value
+        self.assertEqual(tempCache.getByName("5").name, "5")
+
+    # Fills the cache and evicts and checks to see if it evicts the correct value
     def test_cacheHits(self):
         soundObjs = getMetadataList()
         tempCache = Cache(5)
-        for i in range(0,5):
+        for i in range(5):
             tempCache.cacheData(soundObjs[i])
-            soundObjs[i].last_accessed = i #simulate a time difference between caches
+            soundObjs[i].last_accessed = i  # simulate a time difference between caches
         self.assertIsNone(tempCache.getByName("5"))
         tempCache.cacheData(soundObjs[5])
-        self.assertEqual(tempCache.getByName("5").name,
-                         "5")
-        self.assertEqual(tempCache.getByName("1").name,
-                         "1")
-        self.assertEqual(tempCache.getByName("2").name,
-                         "2")
-        self.assertEqual(tempCache.getByName("3").name,
-                         "3")
-        self.assertEqual(tempCache.getByName("4").name,
-                         "4")
-        self.assertEqual(tempCache.getByName("5").name,
-                         "5")
+        self.assertEqual(tempCache.getByName("5").name, "5")
+        self.assertEqual(tempCache.getByName("1").name, "1")
+        self.assertEqual(tempCache.getByName("2").name, "2")
+        self.assertEqual(tempCache.getByName("3").name, "3")
+        self.assertEqual(tempCache.getByName("4").name, "4")
+        self.assertEqual(tempCache.getByName("5").name, "5")
+
 
 if __name__ == "__main__":
-    unittest.main()    
-        
+    unittest.main()

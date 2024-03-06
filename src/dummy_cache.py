@@ -26,5 +26,5 @@ class DummyCache:
     def removeTag(self, name, tag):
         return
 
-    def cache(self, _):
+    def cacheData(self, _):
         return

@@ -40,3 +40,5 @@ A sound is added to the cache any time it is drawn from the database (or created
 
 Another advantage of our storage design is we can easily create mock objects.
 For example, our caching strategy does not make sense to use with a command line interface so we created a mock cache (`src/dummy_cache.py`) to be used with the cli (and also tests).
+
+All sounds are stored in a local directory.  We considered storing them in the database, but this would require storing them as binaries.  Note that we default to using `pathlib` for file operations over `os`.

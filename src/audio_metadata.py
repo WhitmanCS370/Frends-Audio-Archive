@@ -1,4 +1,4 @@
-from os.path import abspath
+from pathlib import Path
 import time
 import wave
 
@@ -9,7 +9,7 @@ class AudioMetadata:
     """
 
     def __init__(self, **kwargs):
-        self.file_path = abspath(kwargs["filePath"])
+        self.file_path = Path(kwargs["filePath"])
         self.name = kwargs["name"]
         self.duration = kwargs["duration"]
         self.date_added = kwargs["dateAdded"]
@@ -41,7 +41,7 @@ class AudioMetadata:
 
     def setDuration(self):
         # get the duration
-        with wave.open(self.file_path, "rb") as wave_read:
+        with wave.open(str(self.file_path), "rb") as wave_read:
             self.duration = int(wave_read.getnframes() / wave_read.getframerate())
 
     def updateLastAccessed(self):

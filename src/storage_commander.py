@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from shutil import copyfile, move
 import time
@@ -54,8 +53,7 @@ class StorageCommander:
             return False
         self.database.removeByName(name)
         self.cache.removeByName(name)
-        if os.path.exists(audio.file_path):
-            os.remove(audio.file_path)
+        audio.file_path.unlink(missing_ok=True)  # remove file
         return True
 
     def getByName(self, name):
@@ -82,10 +80,10 @@ class StorageCommander:
         audio = self.getByName(old_name)
         if audio is None or self.getByName(new_name) is not None:
             return False
-        new_path = os.path.join(self.base_directory, f"{new_name}.wav")
+        new_path = Path(self.base_directory, f"{new_name}.wav")
         move(audio.file_path, new_path)
         audio.file_path = new_path
-        self.database.rename(old_name, new_name, new_path)
+        self.database.rename(old_name, new_name, str(new_path))
         self.cache.rename(old_name, new_name)
         return True
 
@@ -101,7 +99,7 @@ class StorageCommander:
         sounds = self.getAll()
         removed_sounds = []
         for sound in sounds:
-            if not os.path.exists(sound.file_path):
+            if not sound.file_path.exists():
                 self.removeSound(sound.name)
                 removed_sounds.append(sound)
 

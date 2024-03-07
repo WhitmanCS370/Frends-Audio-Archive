@@ -20,7 +20,7 @@ class Commander:
     def playAudio(self, name, reverse=False, volume=None, speed=None):
         audio = self.storage.getByName(name)
         file_path = audio.file_path
-        with wave.open(file_path, "rb") as wave_read:
+        with wave.open(str(file_path), "rb") as wave_read:
             audio_data = wave_read.readframes(wave_read.getnframes())
             num_channels = wave_read.getnchannels()
             bytes_per_sample = wave_read.getsampwidth()

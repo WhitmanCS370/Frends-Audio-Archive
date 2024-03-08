@@ -62,43 +62,67 @@ class Cli:
         rename_parser = subparsers.add_parser(
             "rename", description="Rename file in audio archive"
         )
-        rename_parser.add_argument("filename", type=pathlib.Path, help="file to rename")
-        rename_parser.add_argument(
-            "new_name", type=pathlib.Path, help="new name for file"
-        )
+        rename_parser.add_argument("name", type=str, help="name of sound")
+        rename_parser.add_argument("new_name", type=str, help="new name for sound")
 
         clean_parser = subparsers.add_parser(
             "clean",
             description="Remove all sounds from archive that do not have an associated file",
         )
 
+    def _handlePlay(self, args):
+        kwargs = {
+            "speed": args.speed,
+            "volume": args.volume,
+            "reverse": args.reverse,
+        }
+        try:
+            if args.parallel:
+                self.commander.playParallel(args.names, **kwargs)
+            else:
+                self.commander.playSequence(args.names, **kwargs)
+        except FileNotFoundError as e:
+            print(f"Name not found in database: {e}")
+
+    def _handleList(self):
+        for sound in self.commander.getSounds():
+            print(sound)
+
+    def _handleRename(self, args):
+        try:
+            self.commander.rename(str(args.name), str(args.new_name))
+        except Exception as e:
+            print(f"Rename failed: {e}")
+
+    def _handleAdd(self, args):
+        self.commander.addSound(args.filename, args.name)
+
+    def _handleClean(self):
+        self.commander.clean()
+
     def execute_command(self):
         args = self.parser.parse_args()
 
         match args.command:
             case "play":
-                kwargs = {
-                    "speed": args.speed,
-                    "volume": args.volume,
-                    "reverse": args.reverse,
-                }
-                if args.parallel:
-                    self.commander.playParallel(args.names, **kwargs)
-                else:
-                    self.commander.playSequence(args.names, **kwargs)
+                self._handlePlay(args)
             case "list":
-                for sound in self.commander.getSounds():
-                    print(sound)
+                self._handleList()
             case "rename":
-                self.commander.rename(str(args.filename), str(args.new_name))
+                self._handleRename(args)
             case "add":
-                self.commander.addSound(args.filename, args.name)
+                self._handleAdd(args)
             case "clean":
-                self.commander.clean()
+                self._handleClean()
 
 
 if __name__ == "__main__":
-    storage = StorageCommander(DummyCache(), Sqlite())
-    commander = Commander(storage)
-    cli = Cli(commander)
-    cli.execute_command()
+    try:
+        storage = StorageCommander(DummyCache(), Sqlite())
+    except FileNotFoundError as f:
+        print(f"Error: {f}")
+        print("See README.md for initialization instructions")
+    else:
+        commander = Commander(storage)
+        cli = Cli(commander)
+        cli.execute_command()

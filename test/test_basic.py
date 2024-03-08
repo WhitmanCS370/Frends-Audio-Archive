@@ -7,6 +7,7 @@ from src.dummy_cache import DummyCache
 from src.sqlite_init import *
 from src.sqlite_storage import Sqlite
 from src.storage_commander import StorageCommander
+from src.storage_exceptions import *
 
 
 def addAllSounds(base_dir, commander):
@@ -77,7 +78,8 @@ class BasicTests(unittest.TestCase):
         path = Path(self.base_dir, "coffee.wav")
         # we should be able to add this the first time but not the second
         self.assertTrue(self.commander.addSound(path))
-        self.assertFalse(self.commander.addSound(path))
+        with self.assertRaises(NameExists):
+            self.commander.addSound(path)
 
     def test_removeSoundSuccess(self):
         path = Path(self.base_dir, "coffee.wav")
@@ -87,7 +89,8 @@ class BasicTests(unittest.TestCase):
 
     def test_removeSoundFail(self):
         # can't remove a sound if it doesn't exist
-        self.assertFalse(self.commander.removeSound("coffee"))
+        with self.assertRaises(NameMissing):
+            self.commander.removeSound("coffee")
 
     def test_addTag(self):
         addAllSounds(self.base_dir, self.commander)
@@ -115,11 +118,13 @@ class BasicTests(unittest.TestCase):
 
     def test_renameBadOldName(self):
         addAllSounds(self.base_dir, self.commander)
-        self.assertFalse(self.commander.rename("this_isn't_a_name", "new_name"))
+        with self.assertRaises(NameMissing):
+            self.commander.rename("this_isn't_a_name", "new_name")
 
     def test_renameBadNewName(self):
         addAllSounds(self.base_dir, self.commander)
-        self.assertFalse(self.commander.rename("coffee", "coffee-slurp-2"))
+        with self.assertRaises(NameExists):
+            self.commander.rename("coffee", "coffee-slurp-2")
 
     def test_getSounds(self):
         addAllSounds(self.base_dir, self.commander)

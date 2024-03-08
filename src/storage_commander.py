@@ -2,6 +2,7 @@ from pathlib import Path
 from shutil import copyfile, move
 import time
 import wave
+from storage_exceptions import *
 
 
 class StorageCommander:
@@ -18,17 +19,17 @@ class StorageCommander:
         self.database = database
         self.base_directory = Path(base_directory)
 
-    # returns false if the name is already in the audio archive
+    # Raises if the file path does not exist or the name is already in the archive
+    # returns true if the operation is successful
     def addSound(self, file_path, name=None, author=None):
         path = Path(file_path)
         if not path.is_file():
-            raise FileNotFoundError()
+            raise FileNotFoundError(f"Path does not exist: {file_path}")
         if name is None:
             # convert file_path to name of file without extension
             name = path.stem
-        if self.database.getByName(name) is not None:
-            # name already exists - don't add
-            return False
+        if self._soundExists(name):
+            raise NameExists(f"{name} already exists")
         new_path = self.base_directory / f"{name}.wav"
 
         if new_path != path:
@@ -48,9 +49,9 @@ class StorageCommander:
 
     # returns true if the sound is successfully removed
     def removeSound(self, name):
+        if not self._soundExists(name):
+            raise NameMissing(f"{name} does not exist")
         audio = self.getByName(name)
-        if audio is None:
-            return False
         self.database.removeByName(name)
         self.cache.removeByName(name)
         audio.file_path.unlink(missing_ok=True)  # remove file
@@ -65,9 +66,6 @@ class StorageCommander:
         return audio
 
     def getByTags(self, tags):
-        audios = self.cache.getByTags(tags)
-        if audios is not None:
-            return audios
         audios = self.database.getByTags(tags)
         for audio in audios:
             self.cache.cache(audio)
@@ -77,9 +75,16 @@ class StorageCommander:
         return self.database.getAll()
 
     def rename(self, old_name, new_name):
+        """
+        raises NameMissing if the old name doesn't exist and NameExists if new name
+        already is in the archive
+        returns true if the operation is successful
+        """
+        if not self._soundExists(old_name):
+            raise NameMissing(f"{old_name} does not exist")
+        if self._soundExists(new_name):
+            raise NameExists(f"{new_name} already exists")
         audio = self.getByName(old_name)
-        if audio is None or self.getByName(new_name) is not None:
-            return False
         new_path = Path(self.base_directory, f"{new_name}.wav")
         move(audio.file_path, new_path)
         audio.file_path = new_path
@@ -104,3 +109,10 @@ class StorageCommander:
                 removed_sounds.append(sound)
 
         return removed_sounds
+
+    def _soundExists(self, name):
+        try:
+            self.database.getByName(name)
+            return True
+        except NameMissing:
+            return False

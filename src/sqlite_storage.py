@@ -1,5 +1,7 @@
+from pathlib import Path
 import sqlite3
 from audio_metadata import AudioMetadata
+from storage_exceptions import *
 
 
 class SqliteManager:
@@ -25,30 +27,40 @@ class Sqlite:
     """
 
     def __init__(self, db_name="audio_archive.db"):
+        if not Path(db_name).exists():
+            raise FileNotFoundError("No database file found")
         self.db_name = db_name
 
     def addSound(self, file_path, name, duration, cur_time, author=None):
+        """raises NameExists if there is already a sound with the name in the database"""
         query = """INSERT INTO sounds (file_path, name, duration, date_added, last_accessed, author)
         VALUES (?, ?, ?, ?, ?, ?);"""
         with SqliteManager(self.db_name) as m:
-            m.cur.execute(
-                query, (file_path, name, duration, cur_time, cur_time, author)
-            )
-            m.con.commit()
+            try:
+                m.cur.execute(
+                    query, (file_path, name, duration, cur_time, cur_time, author)
+                )
+                m.con.commit()
+            except sqlite3.IntegrityError as e:
+                raise NameExists(f"{name} already exists in database\n{e}")
 
     def removeByName(self, name):
+        """raises NameMissing if name does not exist in the database"""
         query = "DELETE FROM sounds WHERE name = ?;"
         with SqliteManager(self.db_name) as m:
             m.cur.execute(query, (name,))
+            if m.cur.rowcount == 0:
+                raise NameMissing(f"{name} does not exist in database")
             m.con.commit()
 
     def getByName(self, name):
+        """raises NameMissing if name does not exist in the database"""
         query = "SELECT * FROM sounds WHERE name = ?;"
         with SqliteManager(self.db_name) as m:
             res = m.cur.execute(query, (name,))
             data = res.fetchone()
         if data is None:
-            return None
+            raise NameMissing(f"{name} does not exist in database")
         return self._recordToAudioMetadata(data)
 
     def getByTags(self, tags):
@@ -72,7 +84,12 @@ class Sqlite:
         SET name = ?, file_path = ?
         WHERE name = ?;"""
         with SqliteManager(self.db_name) as m:
-            m.cur.execute(query, (new_name, new_path, old_name))
+            try:
+                m.cur.execute(query, (new_name, new_path, old_name))
+            except sqlite3.IntegrityError:
+                raise NameExists(f"{old_name} already in database")
+            if m.cur.rowcount == 0:
+                raise NameMissing(f"{new_name} does not exist in database")
             m.con.commit()
 
     def addTag(self, name, tag):

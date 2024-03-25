@@ -1,3 +1,5 @@
+**Note:** I appreciate the instructions for running your program.
+
 # Johns-Frends
 
 * Andrew Tate
@@ -23,6 +25,8 @@
 There are currently three commands (`play`, `list`, and `rename`).  Run `python cli.py --help` for more information.
 
 By default, `play` plays every sound passed to it back to back.  There are several optional flags such as `-p`, which plays all sounds simultaneously, `-s [FLOAT]`, which changes the speed of the sounds, `-v [FLOAT]`, which changes the volume of the sounds, and `-r` which plays the sounds backwards.
+
+**TODO:** Add the above flags to the usage message
 
 ## Installation:
 

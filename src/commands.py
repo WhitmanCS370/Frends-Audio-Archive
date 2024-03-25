@@ -6,6 +6,7 @@ import simpleaudio as sa
 import tempfile
 import wave
 
+# TODO: Add docstrings
 
 def playAudio(filename, reverse=False, volume=None, speed=None):
     with wave.open(filename, "rb") as wave_read:
@@ -56,6 +57,7 @@ def rename(filename, new_name):
 
 def changeSpeed(audio_data, bytes_per_sample, sample_rate, num_channels, speed):
     # source: https://stackoverflow.com/questions/74136596/how-do-i-change-the-speed-of-an-audio-file-in-python-like-in-audacity-without
+    # NOTE: Thanks for the citation. I was unable to test this feature due to not having ffmpeg installed.
     audio = AudioSegment(
         data=audio_data,
         sample_width=bytes_per_sample,
@@ -70,6 +72,7 @@ def changeSpeed(audio_data, bytes_per_sample, sample_rate, num_channels, speed):
         )
         audio = altered_audio.set_frame_rate(audio.frame_rate)
     # i am sorry to anybody who stumbles upon this
+    # NOTE: You don't need to apologize, just explain why you did it this way.
     # if we directly export this as a wav, it's somehow corrupted when we tried to read
     # it back and play it.
     # But, if we export it as a mp3, load it, export it as a wav, and then play that,

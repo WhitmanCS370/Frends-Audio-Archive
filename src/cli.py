@@ -43,7 +43,7 @@ class Cli:
             "-s",
             "--speed",
             type=float,
-            help="float playback speed for audio (default: 1.0)",
+            help="float playback speed for audio (default: 1.0). NOTE: You must have FFmpeg installed in order to change the speed",
         )
 
         play_parser.add_argument(

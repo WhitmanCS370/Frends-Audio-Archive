@@ -20,31 +20,33 @@
 
 ## Installation:
 
-* Create a virtual environment with `python3.11 -m venv venv`
+* Create a virtual environment with `python3.11 -m venv venv`.
 
 * Activate it with `venv/Scripts/activate` (Windows) or `source venv/bin/activate` (Linux and Mac).
 
 * Install dependencies with `python -m pip install -r requirements.txt`.
 
+* In order to change the speed of a sound, you must have [FFmpeg](https://ffmpeg.org/) installed.
+
 * Note: Deactivate the virtual environment with `deactivate`.
 
-* Source: [Python Virtual Environments: A Primer](https://realpython.com/python-virtual-environments-a-primer)
+* Source: [Python Virtual Environments: A Primer](https://realpython.com/python-virtual-environments-a-primer).
 
 ## Getting Started:
 
-* First, initialize the database by running `python src/sqlite_init.py`
+* First, initialize the database by running `python src/sqlite_init.py`.
 
-* From here, you can add whatever sounds you want with `python src/cli.py add [path to sound] [name (optional)]`
+* From here, you can add whatever sounds you want with `python src/cli.py add [path to sound] [name (optional)]`.
 
-* Once you have added sounds to the archive, you can play them with `python src/cli.py play [name]`
+* Once you have added sounds to the archive, you can play them with `python src/cli.py play [name]`.
 
-* You can optionally specify audio effects to apply such as reversing the sound, changing the volume, changing the speed, or playing multiple sounds in parallel
+* You can optionally specify audio effects to apply such as reversing the sound (`-r`), changing the volume (`-v [volume]`), changing the speed (`-s [speed]`), or playing multiple sounds in parallel (`-p`).
 
-* Other commands: `rename`, `list`, `remove`, `clean`
+* Other commands: `rename`, `list`, `remove`, `clean`.
 
-* For more information, run `python src/cli.py -h` or `python src/cli.py [command] -h`
+* For more information, run `python src/cli.py -h` or `python src/cli.py [command] -h`.
 
-* For more details on the technical design, see `design.md`
+* For more details on the technical design, see `design.md`.
 
 ## Development Notes:
 

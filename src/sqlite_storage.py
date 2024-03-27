@@ -36,6 +36,9 @@ class Sqlite:
 
         Args:
             db_name: String name of the database (representing path to sqlite db file).
+
+        Raises:
+            FileNotFoundError: The file [db_name] does not exist.
         """
         if not Path(db_name).exists():
             raise FileNotFoundError("No database file found")

@@ -96,8 +96,8 @@ class Cli:
                 self.commander.playParallel(args.names, **kwargs)
             else:
                 self.commander.playSequence(args.names, **kwargs)
-        except FileNotFoundError as e:
-            print(f"Name not found in database: {e}")
+        except NameMissing as e:
+            print(f"Error: {e}")
 
     def _handleList(self):
         for sound in self.commander.getSounds():
@@ -106,11 +106,27 @@ class Cli:
     def _handleRename(self, args):
         try:
             self.commander.rename(str(args.name), str(args.new_name))
-        except Exception as e:
-            print(f"Rename failed: {e}")
+        except NameMissing:
+            print(f"{str(args.name)} does not exist in the archive.")
+        except NameExists:
+            print(
+                f"There is already a sound named {str(args.new_name)} in the archive."
+            )
 
     def _handleAdd(self, args):
-        self.commander.addSound(args.filename, args.name)
+        try:
+            self.commander.addSound(args.filename, args.name)
+        except NameExists:
+            if args.name is None:
+                print(
+                    f"Invalid filename - the name already exists in the database.  Hint: Try providing a custom name with -n or --name."
+                )
+            else:
+                print(
+                    f"There is already a sound named {str(args.name)} in the archive."
+                )
+        except FileNotFoundError:
+            print(f"{args.filename} is not a valid path to a file.")
 
     def _handleClean(self):
         self.commander.clean()

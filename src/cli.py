@@ -98,6 +98,8 @@ class Cli:
                 self.commander.playSequence(args.names, **kwargs)
         except NameMissing as e:
             print(f"Error: {e}")
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
 
     def _handleList(self):
         for sound in self.commander.getSounds():

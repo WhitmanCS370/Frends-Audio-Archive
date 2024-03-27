@@ -51,9 +51,13 @@ class Commander:
 
         Raises:
             NameMissing: [name] does not exist in storage.
+            FileNotFoundError: The file path associated with [name] is not a valid file.
         """
         audio = self.storage.getByName(name)
         file_path = audio.file_path
+        if not file_path.is_file():
+            raise FileNotFoundError(f"Path not found: {str(file_path)}")
+
         with wave.open(str(file_path), "rb") as wave_read:
             audio_data = wave_read.readframes(wave_read.getnframes())
             num_channels = wave_read.getnchannels()

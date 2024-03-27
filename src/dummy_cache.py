@@ -1,6 +1,7 @@
 class DummyCache:
     """This class exists so that our audio archive does not need to use a cache
-    if it does not make sense to (such as in tests or our CLI."""
+    if it does not make sense to (such as in tests or our CLI).
+    """
 
     def __init__(self):
         pass

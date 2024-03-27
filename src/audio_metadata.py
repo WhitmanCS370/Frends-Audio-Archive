@@ -1,14 +1,36 @@
+"""This file holds the AudioMetadata class, which serves as a way for us to interact with metadata.
+
+AudioMetadata objects will be retrieved and stored in storage.
+"""
+
 from pathlib import Path
 import time
 import wave
 
 
 class AudioMetadata:
-    """
-    This class is for use with a cache (not yet implemented)
+    """The AudioMetada class serves to store metadata.
+
+    Attributes:
+        file_path: A Path object with the path to the sound.
+        name: String name of the sound.
+        duration: An integer representing the duration of the sound in seconds.
+        author: String author of the sound.
+        tags: String set of tags.
+        last_accessed: Integer storing the time that a sound was last accessed (as seconds since epoch).
     """
 
     def __init__(self, **kwargs):
+        """Constructor.
+
+        Args:
+            **file_path: A Path object with the path to the sound.
+            **name: String name of the sound.
+            **duration: An integer representing the duration of the sound in seconds.
+            **author: String author of the sound.
+            **tags: String set of tags.
+            **last_accessed: Integer storing the time that a sound was last accessed (as seconds since epoch).
+        """
         self.file_path = Path(kwargs["filePath"])
         self.name = kwargs["name"]
         self.duration = kwargs["duration"]
@@ -48,6 +70,7 @@ class AudioMetadata:
         self.last_accessed = int(time.time())
 
     def __str__(self):
+        """Return string containing information in AudioMetadata object."""
         res = []
         for val, name in zip(
             [

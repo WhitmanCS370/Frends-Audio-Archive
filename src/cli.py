@@ -1,3 +1,5 @@
+"""This module holds a CLI for the audio archive."""
+
 import argparse
 import pathlib
 from dummy_cache import DummyCache
@@ -7,7 +9,20 @@ from storage_commander import StorageCommander
 
 
 class Cli:
+    """CLI for the audio archive.
+
+    Attributes:
+        commander: A Commander object, such as the one in commander.py.
+    """
+
     def __init__(self, commander):
+        """Constructor.
+
+        This function assembles the argument parsers for different subcommands.
+
+        Args:
+            commander: A Commander object, such as the one in commander.py.
+        """
         self.commander = commander
         self.parser = argparse.ArgumentParser(description="Audio archive.")
         # since we want to have subself.commander, we create a subparser
@@ -62,43 +77,84 @@ class Cli:
         rename_parser = subparsers.add_parser(
             "rename", description="Rename file in audio archive"
         )
-        rename_parser.add_argument("filename", type=pathlib.Path, help="file to rename")
-        rename_parser.add_argument(
-            "new_name", type=pathlib.Path, help="new name for file"
-        )
+        rename_parser.add_argument("name", type=str, help="name of sound")
+        rename_parser.add_argument("new_name", type=str, help="new name for sound")
 
         clean_parser = subparsers.add_parser(
             "clean",
             description="Remove all sounds from archive that do not have an associated file",
         )
 
+    def _handlePlay(self, args):
+        kwargs = {
+            "speed": args.speed,
+            "volume": args.volume,
+            "reverse": args.reverse,
+        }
+        try:
+            if args.parallel:
+                self.commander.playParallel(args.names, **kwargs)
+            else:
+                self.commander.playSequence(args.names, **kwargs)
+        except NameMissing as e:
+            print(f"Error: {e}")
+
+    def _handleList(self):
+        for sound in self.commander.getSounds():
+            print(sound)
+
+    def _handleRename(self, args):
+        try:
+            self.commander.rename(str(args.name), str(args.new_name))
+        except NameMissing:
+            print(f"{str(args.name)} does not exist in the archive.")
+        except NameExists:
+            print(
+                f"There is already a sound named {str(args.new_name)} in the archive."
+            )
+
+    def _handleAdd(self, args):
+        try:
+            self.commander.addSound(args.filename, args.name)
+        except NameExists:
+            if args.name is None:
+                print(
+                    f"Invalid filename - the name already exists in the database.  Hint: Try providing a custom name with -n or --name."
+                )
+            else:
+                print(
+                    f"There is already a sound named {str(args.name)} in the archive."
+                )
+        except FileNotFoundError:
+            print(f"{args.filename} is not a valid path to a file.")
+
+    def _handleClean(self):
+        self.commander.clean()
+
     def execute_command(self):
+        """Parses arguments and calls appropriate function to handle command."""
         args = self.parser.parse_args()
 
         match args.command:
             case "play":
-                kwargs = {
-                    "speed": args.speed,
-                    "volume": args.volume,
-                    "reverse": args.reverse,
-                }
-                if args.parallel:
-                    self.commander.playParallel(args.names, **kwargs)
-                else:
-                    self.commander.playSequence(args.names, **kwargs)
+                self._handlePlay(args)
             case "list":
-                for sound in self.commander.getSounds():
-                    print(sound)
+                self._handleList()
             case "rename":
-                self.commander.rename(str(args.filename), str(args.new_name))
+                self._handleRename(args)
             case "add":
-                self.commander.addSound(args.filename, args.name)
+                self._handleAdd(args)
             case "clean":
-                self.commander.clean()
+                self._handleClean()
 
 
 if __name__ == "__main__":
-    storage = StorageCommander(DummyCache(), Sqlite())
-    commander = Commander(storage)
-    cli = Cli(commander)
-    cli.execute_command()
+    try:
+        storage = StorageCommander(DummyCache(), Sqlite())
+    except FileNotFoundError as f:
+        print(f"Error: {f}")
+        print("See README.md for initialization instructions")
+    else:
+        commander = Commander(storage)
+        cli = Cli(commander)
+        cli.execute_command()

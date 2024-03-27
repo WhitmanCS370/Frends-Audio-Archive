@@ -231,11 +231,10 @@ class Commander:
                 audio.raw_data, overrides={"frame_rate": int(audio.frame_rate * speed)}
             )
             audio = altered_audio.set_frame_rate(audio.frame_rate)
-        # i am sorry to anybody who stumbles upon this
         # if we directly export this as a wav, it's somehow corrupted when we tried to read
         # it back and play it.
         # But, if we export it as a mp3, load it, export it as a wav, and then play that,
-        # everything works as intended
+        # everything works as intended 💯😁
         with tempfile.NamedTemporaryFile(suffix=".mp3") as mp3_file:
             audio.export(mp3_file.name, format="mp3")
             audio = AudioSegment.from_mp3(mp3_file.name)

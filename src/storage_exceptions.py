@@ -1,3 +1,6 @@
+"""Exceptions for interacting with our storage."""
+
+
 class StorageException(Exception):
     """Problem with storage"""
 

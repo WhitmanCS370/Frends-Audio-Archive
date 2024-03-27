@@ -1,3 +1,5 @@
+"""This module holds a CLI for the audio archive."""
+
 import argparse
 import pathlib
 from dummy_cache import DummyCache
@@ -7,7 +9,20 @@ from storage_commander import StorageCommander
 
 
 class Cli:
+    """CLI for the audio archive.
+
+    Attributes:
+        commander: A Commander object, such as the one in commander.py.
+    """
+
     def __init__(self, commander):
+        """Constructor.
+
+        This function assembles the argument parsers for different subcommands.
+
+        Args:
+            commander: A Commander object, such as the one in commander.py.
+        """
         self.commander = commander
         self.parser = argparse.ArgumentParser(description="Audio archive.")
         # since we want to have subself.commander, we create a subparser
@@ -101,6 +116,7 @@ class Cli:
         self.commander.clean()
 
     def execute_command(self):
+        """Parses arguments and calls appropriate function to handle command."""
         args = self.parser.parse_args()
 
         match args.command:

@@ -46,7 +46,9 @@
 
 * For more details on the technical design, see `design.md`
 
-## Testing:
+## Development Notes:
+
+### Testing:
 
 Tests are written with the built in `unittest` library and can be executed with `python -m unittest`.
 
@@ -55,6 +57,12 @@ Our automatic tests are located in the `tests/` directory, and we have written t
 Our audio functions are all tested manually.
 
 Note that when creating new tests, the file must begin with `test_` in order for them to be discovered.
+
+### Additional Notes:
+
+We have written docstrings according to the [Google Style Guide](https://google.github.io/styleguide/pyguide.html#s3.8-comments-and-docstrings).
+
+Our project is formatted with [`black`](https://black.readthedocs.io/en/stable/).
 
 ## Challenges:
 

@@ -7,7 +7,6 @@ from src.dummy_cache import DummyCache
 from src.sqlite_init import *
 from src.sqlite_storage import Sqlite
 from src.storage_commander import StorageCommander
-from src.storage_exceptions import *
 
 
 def addAllSounds(base_dir, commander):

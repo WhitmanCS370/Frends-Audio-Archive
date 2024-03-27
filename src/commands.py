@@ -135,6 +135,19 @@ class Commander:
         """
         return self.storage.getAll()
 
+    def getByTags(self, tags):
+        """Get all sounds associated with the given tags.
+
+        Caches sounds that are not already cached.
+
+        Args:
+            tags: String list of tags.
+
+        Returns:
+            A list AudioMetadata objects for all sounds associated with the given tags.
+        """
+        return self.storage.getByTags(tags)
+
     def rename(self, old_name, new_name):
         """Renames a sound in the archive.
 

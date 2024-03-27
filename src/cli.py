@@ -70,8 +70,37 @@ class Cli:
             "-n", "--name", type=str, help="name of sound", default=None
         )
 
+        remove_parser = subparsers.add_parser(
+            "remove",
+            description="Remove sounds from the audio archive. NOTE: This is permanent and cannot be undone",
+        )
+        remove_parser.add_argument("name", type=str, help="sound to remove")
+
+        tag_parser = subparsers.add_parser(
+            "tag",
+            description="Add or remove tags from a sound.",
+            help="tag [name] [tag1, tag2, ...] adds tags by default - specify -r to remove the tags.",
+        )
+        tag_parser.add_argument(
+            "name", type=str, help="name of sound to add or remove tag from"
+        )
+        tag_parser.add_argument(
+            "tags", type=str, nargs="+", help="tags to add or remove"
+        )
+        tag_parser.add_argument(
+            "-r",
+            "--remove",
+            action="store_true",
+            help="specify to remove the tag from the sound",
+        )
+
         list_parser = subparsers.add_parser(
-            "list", description="Show files in audio archive"
+            "list",
+            description="Show sounds in audio archive",
+            help="Shows all sounds by default - specify tags to show sounds with tags.",
+        )
+        list_parser.add_argument(
+            "tags", type=str, nargs="*", help="Show sounds with tags"
         )
 
         rename_parser = subparsers.add_parser(
@@ -84,6 +113,17 @@ class Cli:
             "clean",
             description="Remove all sounds from archive that do not have an associated file",
         )
+
+    def execute_command(self):
+        """Parses arguments and calls appropriate function to handle command.
+
+        This uses a dynamic dispatch by using getattr() to find the function from
+        the command name.
+        """
+        args = self.parser.parse_args()
+        method_name = f"_handle{args.command.capitalize()}"
+        handle_function = getattr(self, method_name)
+        handle_function(args)
 
     def _handlePlay(self, args):
         kwargs = {
@@ -101,8 +141,14 @@ class Cli:
         except FileNotFoundError as e:
             print(f"Error: {e}")
 
-    def _handleList(self):
-        for sound in self.commander.getSounds():
+    def _handleList(self, args):
+        # TODO: Consider a better way to handle filtering by tags.
+        if len(args.tags) == 0:
+            sounds = self.commander.getSounds()
+        else:
+            sounds = self.commander.getByTags(args.tags)
+
+        for sound in sounds:
             print(sound)
 
     def _handleRename(self, args):
@@ -130,24 +176,24 @@ class Cli:
         except FileNotFoundError:
             print(f"{args.filename} is not a valid path to a file.")
 
-    def _handleClean(self):
+    def _handleRemove(self, args):
+        try:
+            self.commander.removeSound(args.name)
+        except NameMissing:
+            print(f"{args.name} does not exist in the archive.")
+
+    def _handleTag(self, args):
+        try:
+            for tag in args.tags:
+                if args.remove:
+                    self.commander.removeTag(args.name, tag)
+                else:
+                    self.commander.addTag(args.name, tag)
+        except NameMissing:
+            print(f"{args.name} does not exist in the archive.")
+
+    def _handleClean(self, _args):
         self.commander.clean()
-
-    def execute_command(self):
-        """Parses arguments and calls appropriate function to handle command."""
-        args = self.parser.parse_args()
-
-        match args.command:
-            case "play":
-                self._handlePlay(args)
-            case "list":
-                self._handleList()
-            case "rename":
-                self._handleRename(args)
-            case "add":
-                self._handleAdd(args)
-            case "clean":
-                self._handleClean()
 
 
 if __name__ == "__main__":

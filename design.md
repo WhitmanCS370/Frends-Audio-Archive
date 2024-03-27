@@ -23,7 +23,7 @@ The process for adding a new command involves jumping around more places, but sh
 All commands spawn from `src/commands.py`, so it makes sense to begin by creating a new function in the `Commander` class (which will likely be fairly small).
 If necessary, a new query can be added to the `Storage` class, which can then be implemented in specific database or cache classes.
 After this, you can extend whichever interface you choose to allow the user to call your new function.
-For example, extending the CLI involves creating a new subparser, adding any arguments and flags, and then adding to the switch statement in `execute_command` function.
+For example, extending the CLI involves creating a new subparser, adding any arguments and flags, and then creating an _handle[Command] function.
 
 If possible, a new test should be added in the `tests/` directory.
 

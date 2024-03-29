@@ -6,26 +6,14 @@ class DummyCache:
     def __init__(self):
         pass
 
-    def addSound(self, file_path, name=None, author=None):
-        return True
-
-    def removeByName(self, name):
-        return True
-
-    def getByName(self, name):
+    def add(self, _sound):
         return
 
-    def getByTags(self, tags):
+    def getByName(self, _name):
         return
 
-    def rename(self, old_name, new_name):
+    def removeByName(self, _name):
         return
 
-    def addTag(self, name, tag):
-        return
-
-    def removeTag(self, name, tag):
-        return
-
-    def cache(self, _):
+    def rename(self, _oldName, _newSound):
         return

@@ -1,75 +1,116 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Feb 21 17:34:06 2024
-
-@author: creek
-"""
-import random
-
-
 class Cache:
     """
-    This class is for use with the audioObj objects for quicker retrieval
-    of more frequently used sounds
+    This cache implements a LRU caching strategy in order to eliminate database queries
+    when possible.
+
+    Internally, it relies on a doubly linked list and a dictionary to provide constant time
+    retrieval and deletion.
+
+    Attributes:
+        soundNames: String -> DLL_Node dictionary.
+        head: DLL_Node - the most recently accessed AudioMetadata Object (or None if the
+            cache is empty). head.prev will always be None.
+        tail: DLL_Node - the least recently accessed AudioMetadata Object (or None if the
+            cache is empty). tail.next will always be None.
+        maxCacheSize: The maximum number of sounds to cache (capped at 10,000).
     """
 
-    def __init__(self, size):
-        self.cache = dict()
-        self.maxCacheSize = size
+    def __init__(self, maxCacheSize=10000):
+        """Constructor.
+
+        Args:
+            maxCacheSize: The maximum number of sounds to cache (capped at 10,000).
+        """
+        self.soundNames = {}
+        self.maxCacheSize = min(maxCacheSize, 10000)
+        self.head = None
+        self.tail = None
+
+    def add(self, sound):
+        """Add a sound to the cache, or move it to the front of the DLL if it already exists.
+
+        Args:
+            sound: An AudioMetadata object.
+        """
+        if sound.name in self.soundNames:
+            self.removeByName(sound.name)
+
+        new_node = DLL_Node(val=sound, prev=None, next=self.head)
+        if self.head is None:
+            self.head = new_node
+            self.tail = new_node
+        else:
+            self.head.prev = new_node
+            self.head = new_node
+        self.soundNames[sound.name] = new_node
+        if self._isCacheFull():
+            oldest_sound = self.tail.val
+            self.removeByName(oldest_sound.name)
 
     def getByName(self, name):
-        # parse dictionary for sounds that have the given title
-        if name in self.cache:
-            return self.cache[name]
-        return None
+        """Get a sound from the archive with its name.
 
-    def getByTags(self, tags):
-        returnVals = []
-        for musicObj in self.cache.values():
-            numOfTagsMatched = 0
-            for tag in musicObj.tags:
-                if tag in tags:
-                    numOfTagsMatched += 1
-            if numOfTagsMatched == len(tags):
-                returnVals.append(musicObj)
-        return returnVals
+        Args:
+            name: String name of sound
 
-    def cache(self, soundObj):
-        # check if object is already cached
-        if soundObj.title in self.cache:
-            # update the time accessed and return early
-            soundObj.updateLastAccessed()
-            return "object already in cache"
-        if not self.isCachFull:  # cache miss with a partially empty cache
-            # add soundObj to cache
-            self.cache[soundObj.title] = soundObj
-        else:  # cache miss with a full cache
-            # evict oldest sound
-            titleToEvict = self.getOldestEntry()
-            self.cache.pop(titleToEvict)
-            # add soundObj to cache
-            self.cache[soundObj.name] = soundObj
-        soundObj.updateLastAccessed()
-        return "object cached"
+        Returns:
+            Either an AudioMetadata object if the sound is cached or None.
+        """
+        node = self.soundNames.get(name)
+        if node is None:
+            return None
+        # Reset to front of DLL
+        self.removeByName(name)
+        self.add(node.val)
+        return node.val
 
     def removeByName(self, name):
-        raise NotImplementedError
+        """Remove a sound from the cache.
 
-    # This should be called before a name change of an audio object
-    def rename(self, name, newName):
-        if name in self.cache:
-            tempObject = self.cache[name]
-            self.cache.pop(name)
-            self.cache[newName] = tempObject
+        Args:
+            name: The name of the sound to remove.
+        """
+        if name not in self.soundNames:
+            return
+        node = self.soundNames[name]
+        del self.soundNames[node.val.name]
+        if node == self.head:
+            if node == self.tail:
+                self.head, self.tail = None, None
+                return
+            self.head = self.head.next
+            self.head.prev = None
+            return
+        elif node == self.tail:
+            self.tail = self.tail.prev
+            self.tail.next = None
+            return
 
-    def isCacheFull(self):
-        if len(self.cache) <= self.maxCacheSize:
-            return True
-        return False
+        before, after = node.prev, node.next
+        before.next = after
+        after.prev = before
 
-    def getOldestEntry(self):
-        oldest = random.choice(list(self.cache.items()))
-        for soundObj in self.cache:
-            if soundObj.last_accessed > oldest.last_accessed:
-                oldest = soundObj
-        return oldest
+    def rename(self, oldName, newSound):
+        """Called when a sound is renamed.
+
+        Args:
+            oldName: The former name of the sound (string).
+            newSound: An up-to-date AudioMetadata object.
+        """
+        self.removeByName(oldName)
+        self.add(newSound)
+
+    def _isCacheFull(self):
+        return len(self.soundNames) > self.maxCacheSize
+
+
+class DLL_Node:
+    """Doubly linked list node to be used for the LRU cache."""
+
+    def __init__(self, val=None, prev=None, next=None):
+        self.val = val
+        self.prev = prev
+        self.next = next
+
+    def __eq__(self, other):
+        return self.val == other.val

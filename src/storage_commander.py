@@ -80,8 +80,8 @@ class StorageCommander:
             duration = int(wave_read.getnframes() / wave_read.getframerate())
         cur_time = int(time.time())
         self.database.addSound(str(new_path), name, duration, cur_time, author)
-        audio = self.getByName(name)
-        self.cache.cache(audio)
+        sound = self.getByName(name)
+        self.cache.add(sound)
         return True
 
     def removeSound(self, name):
@@ -98,10 +98,10 @@ class StorageCommander:
         Raises:
             NameMissing: [name] does not exist in the database.
         """
-        audio = self.getByName(name)
+        sound = self.getByName(name)
         self.database.removeByName(name)
         self.cache.removeByName(name)
-        audio.file_path.unlink(missing_ok=True)  # remove file
+        sound.file_path.unlink(missing_ok=True)  # remove file
         return True
 
     def getByName(self, name):
@@ -118,12 +118,12 @@ class StorageCommander:
         Raises:
             NameMissing: [name] does not exist in the database.
         """
-        audio = self.cache.getByName(name)
-        if audio is not None:
-            return audio
-        audio = self.database.getByName(name)
-        self.cache.cache(audio)
-        return audio
+        sound = self.cache.getByName(name)
+        if sound is not None:
+            return sound
+        sound = self.database.getByName(name)
+        self.cache.add(sound)
+        return sound
 
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
@@ -136,10 +136,10 @@ class StorageCommander:
         Returns:
             A list AudioMetadata objects for all sounds associated with the given tags.
         """
-        audios = self.database.getByTags(tags)
-        for audio in audios:
-            self.cache.cache(audio)
-        return audios
+        sounds = self.database.getByTags(tags)
+        for sound in sounds:
+            self.cache.add(sound)
+        return sounds
 
     def getAll(self):
         """Get all sounds from the storage (as AudioMetadata objects)."""
@@ -164,12 +164,12 @@ class StorageCommander:
             raise NameMissing(f"{old_name} does not exist")
         if self._soundExists(new_name):
             raise NameExists(f"{new_name} already exists")
-        audio = self.getByName(old_name)
+        sound = self.getByName(old_name)
         new_path = Path(self.base_directory, f"{new_name}.wav")
-        move(audio.file_path, new_path)
-        audio.file_path = new_path
+        move(sound.file_path, new_path)
+        sound.file_path = new_path
         self.database.rename(old_name, new_name, str(new_path))
-        self.cache.rename(old_name, new_name)
+        self.cache.rename(old_name, self.getByName(new_name))
         return True
 
     def addTag(self, name, tag):
@@ -182,8 +182,8 @@ class StorageCommander:
         Raises:
             NameMissing: [name] isn't in the database.
         """
-        self.cache.addTag(name, tag)
         self.database.addTag(name, tag)
+        self._refreshCache(name)
 
     def removeTag(self, name, tag):
         """Remove a tag from a sound.
@@ -195,8 +195,8 @@ class StorageCommander:
         Raises:
             NameMissing: [name] isn't in the database.
         """
-        self.cache.removeTag(name, tag)
         self.database.removeTag(name, tag)
+        self._refreshCache(name)
 
     def clean(self):
         """Remove all sounds from the database without an associated file.
@@ -212,6 +212,11 @@ class StorageCommander:
                 removed_sounds.append(sound)
 
         return removed_sounds
+
+    def _refreshCache(self, name):
+        """Refresh a stale cache entry by removing it from the cache and reloading it from the database."""
+        self.cache.removeByName(name)
+        self.cache.add(self.database.getByName(name))
 
     def _soundExists(self, name):
         """Returns if a sound exists in the database."""

@@ -42,6 +42,13 @@ class AudioMetadata:
     def _updateLastAccessed(self):
         self.last_accessed = int(time.time())
 
+    def __eq__(self, other):
+        """Equal dunder method.
+
+        Two AudioObjects are the same if their name is the same.
+        """
+        return self.name == other.name
+
     def __str__(self):
         """Return string containing information in AudioMetadata object."""
         res = []

@@ -64,5 +64,6 @@ class AudioMetadata:
             ],
         ):
             res.append(f"{name}: {val}")
-        res.append(f"tags: {', '.join(self.tags)}")
+        tags_list = sorted(list(self.tags))
+        res.append(f"tags: {', '.join(tags_list)}")
         return ("\n".join(res)) + "\n"

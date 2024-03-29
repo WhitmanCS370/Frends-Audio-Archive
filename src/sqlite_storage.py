@@ -199,7 +199,7 @@ class Sqlite:
         query = "SELECT tag FROM tags WHERE sound_id = ?;"
         with SqliteManager(self.db_name) as m:
             res = m.cur.execute(query, (id,)).fetchall()
-        return [data[0] for data in res]
+        return {data[0] for data in res}
 
     def _getSoundID(self, name):
         """Get the ID associated with a sound.

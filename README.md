@@ -10,13 +10,13 @@
 
 ## Contributions:
 
-* Andrew Tate: Andrew worked on the initial setup of our repository and our first functions to play audio.  He also worked on the playback speed audio modification.
+* Andrew Tate: Andrew worked on a first implementation of a cache.
 
-* John Leeds: John contributed to the organization of the repository, testing, and code review.
+* John Leeds: John added many commands to interact with the storage such as adding and removing sounds, cleaning the archive, adding and removing tags, and searching by tags.
 
-* Luke Samuels: Luke helped refactor to separate our source code and tests.  Luke also worked on the reverse audio modification.
+* Luke Samuels:
 
-* Rhys Sorenson-Graff: Rhys researched and contributed conversion of `.wav` files to numpy arrays. This is how we originally intended to handle audio modifications before discovering the built in `audioop` library.
+* Rhys Sorenson-Graff: 
 
 ## Installation:
 
@@ -48,13 +48,41 @@
 
 * For more details on the technical design, see `design.md`.
 
+## Sample Interaction:
+
+These are commands you might run when getting started with the archive.
+
+1. Make sure that you have followed the steps in the `Installation` section.
+
+2. Iniatilize the database - `python src/sqlite_init.py`
+
+3. Add sounds - we have provided starter sounds for testing purposes, but feel free to remove them once no longer needed.
+    * `python src/cli.py add sounds/coffee.wav` (will be named `coffee`)
+    * `python src/cli.py add sounds/toaster.wav -n toast` (will be named `toast`)
+
+4. Make sure that they were properly added - `python src/cli.py list`
+
+5. Add the tags `drink` and `yum` to coffee - `python src/cli.py tag coffee drink yum`
+
+6. List all sounds with the tag `drink` - `python src/cli.py list drink`
+
+7. Play the `toaster` sound - `python src/cli.py play toast`
+
+8. Play the `coffee` and `toast` sounds back to back and reversed - `python src/cli.py play coffee toast -r`
+
+9. Remove the `coffee` sound - `python src/cli.py remove coffee`
+
+10. Verify that `coffee` was removed - `python src/cli.py list`
+
 ## Development Notes:
 
 ### Testing:
 
 Tests are written with the built in `unittest` library and can be executed with `python -m unittest`.
 
-Our automatic tests are located in the `tests/` directory, and we have written tests for as many of our commands as possible.  There are tests for adding, renaming, and removing sounds as well as tests for adding and removing tags.
+Our automatic tests are located in the `tests/` directory, and we have written tests for as many of our commands as possible.
+There are tests for adding, renaming, and removing sounds as well as tests for adding and removing tags.
+There are also tests for the basic cache operations.
 
 Our audio functions are all tested manually.
 
@@ -68,8 +96,16 @@ Our project is formatted with [`black`](https://black.readthedocs.io/en/stable/)
 
 ## Challenges:
 
-One of the biggest challenges we faced was creating audio modifications (such as changing the speed or volume).  Because the `simpleaudio` documentation references using numpy arrays, we thought we would need to modify the `.wav` files using a similar process.  However, we eventually discovered the `audioop` library that is built into Python, which had all of the features that we wanted.
+One of the biggest challenges for handling the organization and characterization of sounds in this epoch was error handling.
+For example, there are many possible exceptions when a user is trying to rename a sound.
+Some of the possible problems are the sound might not exist, there might already be a sound associated with the new name, or the metadata database might not even be initialized.
 
-In particular, we struggled to implement modifying playback speed.  When using `pydub` (which seems to be commonly suggested online), our audio was corrupted when we exported it and then opened it with `wave`.  Interestingly, the `.wav` file was fine when using a built-in audio player.  We were able to work around this by first exporting it as an mp3, reading that as a `pydub` `AudioSegment`, exporting that as a wav, and then reading that.  Obviously, this is not how we would like to handle this, but we can change it later if necessary.
+Another challenge we faced was copy and pasting docstrings.
+The `Storage Commander` relies upon a database implementation, like the one in `src/sqlite_storage.py`.
+When a user tries to add a sound to the database, the `Commander` calls `self.storage.addSound()` which then adds the sound to both the cache and the database.
+This means that there is an `addSound` function in the `src/sqlite_storage.py`, `src/storage_commander.py`, and `src/commands.py`, and all of these functions have the same purpose and effectively have the same doc string.
+We are currently questioning if there is a better way to handle the documentation than effectively copy and pasting the same doc string in three different places, or if the commander calling `addSound` which calls `addSound` in the database is a code smell.
 
-We also are currently deciding how to store sounds in the archive.  Right now, we just are throwing all the sounds in the `sounds/` directory, but this is subject to change.
+In the future, we still have a few more edge cases to catch for interacting with the archive so we will need to account for those.
+As of now, the user can add any file they want to the archive when we only have support for playing `.wav` files, so we will need to introduce some way to handle that.
+In addition, we also anticipate other refactoring ideas to pop up as we continue to develop.

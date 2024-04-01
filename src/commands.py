@@ -8,6 +8,8 @@ from pydub.effects import speedup
 import simpleaudio as sa
 import tempfile
 import wave
+import struct
+import numpy as np
 
 # Note: adding this import is not needed for this file but makes the tests work.
 # I don't know why, but I think maybe because if I import src.storage_exceptions in
@@ -35,7 +37,7 @@ class Commander:
         """
         self.storage = storage
 
-    def playAudio(self, name, reverse=False, volume=None, speed=None):
+    def playAudio(self, name, reverse=False, volume=None, speed=None, filter=None):
         """Plays an audio file after applying effects to the sound.
 
         Note that multiple effects can be applied simultaneously.
@@ -72,13 +74,15 @@ class Commander:
             audio_data, num_channels, bytes_per_sample, sample_rate = self._changeSpeed(
                 audio_data, bytes_per_sample, sample_rate, num_channels, speed
             )
+        if filter:
+            audio_data = self._filter(audio_data, sample_rate, bytes_per_sample, 440, True)
         wave_obj = sa.WaveObject(
             audio_data, num_channels, bytes_per_sample, sample_rate
         )
         play_obj = wave_obj.play()
         return play_obj
 
-    def playAudioWait(self, name, reverse=False, volume=None, speed=None):
+    def playAudioWait(self, name, reverse=False, volume=None, speed=None, filter=filter):
         """Plays an audio file and waits for it to be done playing.
 
         Args:
@@ -90,9 +94,9 @@ class Commander:
         Raises:
             NameMissing: [name] does not exist in storage.
         """
-        self.playAudio(name, reverse=reverse, volume=volume, speed=speed).wait_done()
+        self.playAudio(name, reverse=reverse, volume=volume, speed=speed, filter=filter).wait_done()
 
-    def playSequence(self, names, reverse=False, volume=None, speed=None):
+    def playSequence(self, names, reverse=False, volume=None, speed=None, filter=filter):
         """Plays a list of audio files back to back.
 
         Args:
@@ -105,9 +109,9 @@ class Commander:
             NameMissing: There is a name in [names] that does not exist in storage.
         """
         for name in names:
-            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed)
+            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, filter=filter)
 
-    def playParallel(self, names, reverse=False, volume=None, speed=None):
+    def playParallel(self, names, reverse=False, volume=None, speed=None, filter=filter):
         """Plays a list of audio files simultaneously.
 
         Args:
@@ -122,7 +126,7 @@ class Commander:
         play_objs = []
         for name in names:
             play_objs.append(
-                self.playAudio(name, reverse=reverse, volume=volume, speed=speed)
+                self.playAudio(name, reverse=reverse, volume=volume, speed=speed, filter=filter)
             )
         for play_obj in play_objs:
             play_obj.wait_done()
@@ -263,3 +267,65 @@ class Commander:
                     bytes_per_sample = wave_read.getsampwidth()
                     sample_rate = wave_read.getframerate()
         return audio_data, num_channels, bytes_per_sample, sample_rate
+    
+    def _filter(self, audio_data, sample_rate, bytes_per_sample, cutoff_frequency, highpass):
+        print("bytes per sample: ", bytes_per_sample)
+        dn_1 = 0
+        # data is passed as ints in a raw data block but we need to operate on floats so we do the cast now
+        # data_as_ints = self._bytes2ints(audio_data, bytes_per_sample)
+        data_as_floats = self._bytes2floats(audio_data, bytes_per_sample)
+        print(data_as_floats[:1000])
+        
+        allpass_output = np.zeros_like(data_as_floats)
+
+        for n in range(len(data_as_floats)):
+            tan = np.tan(np.pi * cutoff_frequency / sample_rate)
+            a1 = (tan - 1) / (tan + 1) # formula for filtering
+            allpass_output[n] = a1 * data_as_floats[n] + dn_1
+            dn_1 = data_as_floats[n] - a1 * allpass_output[n]
+        
+        if highpass:
+            allpass_output *= -1 
+
+        filter_output = data_as_floats + allpass_output
+        filter_output *= 0.25 # lower the volume  
+        print(filter_output[:1000])      
+
+        print("filter called")
+        data_as_ints = self._floats2ints(filter_output)
+        return self._ints2bytes(filter_output, bytes_per_sample)
+
+
+    # unsigned only
+    def _bytes2ints(self, data, sample_size):
+        if len(data) % sample_size != 0:
+            raise ValueError("Byte string length must be a multiple of sample_rate")
+
+        int_list = []
+        for i in range(0, len(data), sample_size):
+            chunk = data[i:i+4]
+            value = int.from_bytes(chunk, byteorder='little')  # Assuming big-endian byte order
+            int_list.append(value)
+
+        return int_list
+    
+    def _bytes2floats(self, data, bytes_per_sample):
+        if len(data) % bytes_per_sample != 0:
+            raise ValueError("Byte string length must be a multiple of sample_rate")
+
+        float_list = []
+        for i in range(0, len(data), bytes_per_sample):
+            chunk = data[i:i+bytes_per_sample]
+            float_value = struct.unpack('f', chunk)[0]
+            float_list.append(float_value)
+
+        return float_list
+    
+    def _ints2bytes(self, data, sample_size):
+        byte_string = b''
+        for num in data:
+            byte_string += num.to_bytes(sample_size, byteorder='little')  # Assuming big-endian byte order
+        return byte_string
+    
+    def _floats2ints(self, data):
+        return [int(num) for num in data]

@@ -57,6 +57,13 @@ class Cli:
             help="float playback volume for audio (default: 1.0)",
         )
 
+        play_parser.add_argument(
+            "-f",
+            "--filter",
+            type=str,
+            help="(l)ow/(h)igh pass filter "
+        )
+
         # nargs='+' means that we expect at least one argument
         play_parser.add_argument(
             "names", type=str, nargs="+", help="names of sounds to play"
@@ -130,6 +137,7 @@ class Cli:
             "speed": args.speed,
             "volume": args.volume,
             "reverse": args.reverse,
+            "filter": args.filter
         }
         try:
             if args.parallel:

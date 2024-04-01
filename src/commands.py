@@ -8,6 +8,9 @@ from pydub.effects import speedup
 import simpleaudio as sa
 import tempfile
 import wave
+import librosa
+import soundfile
+import os
 
 # Note: adding this import is not needed for this file but makes the tests work.
 # I don't know why, but I think maybe because if I import src.storage_exceptions in
@@ -35,7 +38,7 @@ class Commander:
         """
         self.storage = storage
 
-    def playAudio(self, name, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
+    def playAudio(self, name, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None, transpose=None):
         """Plays an audio file after applying effects to the sound.
 
         Note that multiple effects can be applied simultaneously.
@@ -45,6 +48,7 @@ class Commander:
             reverse: Boolean whether to reverse the sound.
             volume: Float volume to play the sound at (1.0 is normal) or None which means don't change the volume.
             speed: Float speed to play the sound at (1.0 is normal) or None which means don't change the speed.
+            transpose: Int amount to transpose by (in semitones, negative values shift downwards)
 
         Returns:
             A PlayObject.
@@ -57,13 +61,24 @@ class Commander:
         file_path = audio.file_path
         if not file_path.is_file():
             raise FileNotFoundError(f"Path not found: {str(file_path)}")
+        
+        if transpose:
+            y, sr = librosa.load(file_path)
+            steps = transpose
+            new_y = librosa.effects.pitch_shift(y, sr=sr, n_steps=steps)
+            file_path = "_.wav"
+            soundfile.write(file_path, new_y, sr)
+            
 
         with wave.open(str(file_path), "rb") as wave_read:
             audio_data = wave_read.readframes(wave_read.getnframes())
             num_channels = wave_read.getnchannels()
             bytes_per_sample = wave_read.getsampwidth()
             sample_rate = wave_read.getframerate()
-
+        
+        if transpose:
+            os.remove(file_path)
+        
         if reverse:
             audio_data = audioop.reverse(audio_data, bytes_per_sample)
         if volume is not None and volume >= 0:
@@ -91,7 +106,7 @@ class Commander:
 
         return play_obj
 
-    def playAudioWait(self, name, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
+    def playAudioWait(self, name, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None, transpose=None):
         """Plays an audio file and waits for it to be done playing.
 
         Args:
@@ -103,9 +118,10 @@ class Commander:
         Raises:
             NameMissing: [name] does not exist in storage.
         """
-        return self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save).wait_done()
 
-    def playSequence(self, names, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
+        return self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save, transpose=transpose).wait_done()
+
+    def playSequence(self, names, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None, transpose=None):
         """Plays a list of audio files back to back.
 
         Args:
@@ -120,9 +136,9 @@ class Commander:
         if len(names) > 1 and save is not None:
             raise NotImplementedError("Cannot save multiple sounds at once")
         for name in names:
-            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save)
+            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save, transpose=transpose)
 
-    def playParallel(self, names, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
+    def playParallel(self, names, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None, transpose=None):
         """Plays a list of audio files simultaneously.
 
         Args:
@@ -139,7 +155,7 @@ class Commander:
         play_objs = []
         for name in names:
             play_objs.append(
-                self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save)
+                self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save, transpose=transpose)
             )
         for play_obj in play_objs:
             play_obj.wait_done()

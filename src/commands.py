@@ -142,7 +142,7 @@ class Commander:
         """
         play_objs = []
         for name in names:
-            audio_data, num_channels, bytes_per_sample, sample_rate,  = self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
+            audio_data, num_channels, bytes_per_sample, sample_rate, play_obj = self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
             play_objs.append(
                 play_obj
             )

@@ -7,3 +7,5 @@ pathspec==0.12.1
 platformdirs==4.2.0
 pydub==0.25.1
 simpleaudio==1.0.4
+librosa==0.10.1
+soundfile==0.12.1

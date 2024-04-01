@@ -35,7 +35,7 @@ class Commander:
         """
         self.storage = storage
 
-    def playAudio(self, name, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None, save=None):
+    def playAudio(self, name, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
         """Plays an audio file after applying effects to the sound.
 
         Note that multiple effects can be applied simultaneously.
@@ -72,8 +72,12 @@ class Commander:
             audio_data, num_channels, bytes_per_sample, sample_rate = self._changeSpeed(
                 audio_data, bytes_per_sample, sample_rate, num_channels, speed
             )
+
         if start_sec is not None or end_sec is not None:
-            audio_data = self.cropSound(audio_data, sample_rate, start_sec, end_sec)
+            start_percent, end_percent = self.calculatePercent(audio_data, bytes_per_sample, num_channels, sample_rate, start_sec, end_sec)
+        
+        if start_percent is not None or end_percent is not None:
+            audio_data =self.cropSound(audio_data, bytes_per_sample, num_channels, start_percent, end_percent)
 
         wave_obj = sa.WaveObject(
             audio_data, num_channels, bytes_per_sample, sample_rate
@@ -87,7 +91,7 @@ class Commander:
 
         return play_obj
 
-    def playAudioWait(self, name, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None, save=None):
+    def playAudioWait(self, name, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
         """Plays an audio file and waits for it to be done playing.
 
         Args:
@@ -99,9 +103,9 @@ class Commander:
         Raises:
             NameMissing: [name] does not exist in storage.
         """
-        return self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec, save=save).wait_done()
+        return self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save).wait_done()
 
-    def playSequence(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None, save=None):
+    def playSequence(self, names, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
         """Plays a list of audio files back to back.
 
         Args:
@@ -116,9 +120,9 @@ class Commander:
         if len(names) > 1 and save is not None:
             raise NotImplementedError("Cannot save multiple sounds at once")
         for name in names:
-            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec, save=save)
+            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save)
 
-    def playParallel(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None, save=None):
+    def playParallel(self, names, reverse=False, volume=None, speed=None, start_percent=None, end_percent=None, start_sec=None, end_sec=None, save=None):
         """Plays a list of audio files simultaneously.
 
         Args:
@@ -135,46 +139,80 @@ class Commander:
         play_objs = []
         for name in names:
             play_objs.append(
-                self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec, save=save)
+                self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_percent=start_percent, end_percent=end_percent, start_sec=start_sec, end_sec=end_sec, save=save)
             )
         for play_obj in play_objs:
             play_obj.wait_done()
+
+    def calculatePercent(self, audio_data, bytes_per_sample, num_channels, sample_rate, start_sec=None, end_sec=None):
+        """Calculates the start and end percent of the audio data based on the start and end seconds.
+            start_sec and end_sec wll both be returned as floats, even if they are not None.
+
+        Args: 
+            audio_data: bytes of audio data
+            sample_rate: int sample rate of audio data
+            num_channels: int number of channels in audio data.
+            start_sec: The start position of the audio in seconds.
+            end_sec: The end position of the audio in seconds.
+
+        Raises:
+            None
+        """
+        total_duration_seconds = len(audio_data) / (sample_rate * bytes_per_sample * num_channels)
+        
+        # Calculate start percent
+        if (start_sec is None): 
+            start_percent = 0
+        else:
+            start_percent = start_sec / total_duration_seconds
+
+        # Calculate end percent
+        if (end_sec is None):
+            end_percent = 1
+        else:
+            end_percent = end_sec / total_duration_seconds
+
+        return start_percent, end_percent
+
     
-    def cropSound(self, audio_data, sample_rate, start_sec=None, end_sec=None):
-        """ Returns modiefied audio data for the cropped sound starting at start_sec and ending at end_sec.
+    def cropSound(self, audio_data, bytes_per_sample, num_channels, start_percent=None, end_percent=None):
+        """ Returns modified audio data for the cropped sound starting at start_percent and ending at end_percent.
+            Make the buffer size a multiple of bytes-per-sample and the number of channels.
         
         Args: 
             audio_data: bytes of audio data
             sample_rate: int sample rate of audio data
-            start_sec: float start time of cropped audio in seconds
-            end_sec: float end time of cropped audio in seconds
+            num_channels: int number of channels in audio data.
+            start_percent: The start position of the audio as a percent, ranges from 0 to 1.
+            end_percent: The end position of the audio as a percent, ranges from 0 to 1.
 
         Raises:
-            ValueError: start must be greater than or equal to 0
-            ValueError: end must be less than or equal to the length of the audio data
-            ValueError: start must be less than the length of the audio data
-            ValueError: start must be less than end
+            ValueError: start_percent is before the start of the audio data
+            ValueError: end_percent is after the end of the audio data
+            ValueError: start must be before than the end of the audio data
+            ValueError: start position must be before the end position
 
         """
-        start_frame = int(start_sec * sample_rate) if start_sec is not None else 0
-        end_frame = int(end_sec * sample_rate) if end_sec is not None else len(audio_data)
+        # Reset null positions
+        if (start_percent is None): start_percent = 0
+        if (end_percent is None): end_percent = 1
 
-        if start_frame < 0:
-            raise ValueError("Start must be greater than or equal to 0")
-        if end_frame > len(audio_data):
-            raise ValueError("End must be less than or equal to the length of the audio data")
-        if start_frame >= len(audio_data):
-            raise ValueError("Start must be less than the length of the audio data")
-        if start_frame >= end_frame:
-            raise ValueError("Start must be less than end")
-        
-        # print(f"start_frame: {start_frame}")
-        # print(f"end_frame: {end_frame}")
-        # print(f"len(audio_data): {len(audio_data * sample_rate)}")
+        # Check for invalid values
+        if start_percent < 0:
+            raise ValueError("Start position is before the start of the audio data")
+        if end_percent > 1:
+            raise ValueError("End position is after the end of the audio data")
+        if start_percent >= 1:
+            raise ValueError("Start must be before than the end of the audio data")
+        if start_percent >= end_percent:
+            raise ValueError("Start position must be before the end position")
 
-        cropped_audio = audio_data[start_frame:end_frame]
+        # Calculate start and end indices
+        start_index = int(start_percent * len(audio_data) / (bytes_per_sample * num_channels)) * (bytes_per_sample * num_channels)
+        stop_index = int(end_percent * len(audio_data) / (bytes_per_sample * num_channels)) * (bytes_per_sample * num_channels)
 
-        return cropped_audio
+        return audio_data[start_index:stop_index]
+
     
     def saveAudio(self, name, num_channels, audio_data, bytes_per_sample, sample_rate):
         """Saves the edited sound to a file and to the database.

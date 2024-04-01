@@ -57,6 +57,13 @@ class Cli:
             help="float playback volume for audio (default: 1.0)",
         )
 
+        play_parser.add_argument(
+            "-t",
+            "--transpose",
+            type=int,
+            help="transposes the sound by n semitones"
+        )
+
         # nargs='+' means that we expect at least one argument
         play_parser.add_argument(
             "names", type=str, nargs="+", help="names of sounds to play"
@@ -130,6 +137,7 @@ class Cli:
             "speed": args.speed,
             "volume": args.volume,
             "reverse": args.reverse,
+            "transpose": args.transpose
         }
         try:
             if args.parallel:

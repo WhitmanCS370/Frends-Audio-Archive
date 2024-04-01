@@ -268,33 +268,31 @@ class Commander:
                     sample_rate = wave_read.getframerate()
         return audio_data, num_channels, bytes_per_sample, sample_rate
     
-    def _filter(self, audio_data, sample_rate, bytes_per_sample, cutoff_frequency, highpass):
+    def _filter(self, audio_data, sample_rate, bytes_per_sample, in_cutoff, highpass):
         print("bytes per sample: ", bytes_per_sample)
         dn_1 = 0
         # data is passed as ints in a raw data block but we need to operate on floats so we do the cast now
-        # data_as_ints = self._bytes2ints(audio_data, bytes_per_sample)
-        data_as_floats = self._bytes2floats(audio_data, bytes_per_sample)
-        print(data_as_floats[:1000])
+        data_as_ints = self._bytes2ints(audio_data, bytes_per_sample)
+        cutoff_frequency = np.geomspace(20000, 20, len(data_as_ints))
         
-        allpass_output = np.zeros_like(data_as_floats)
+        allpass_output = np.zeros_like(data_as_ints)
 
-        for n in range(len(data_as_floats)):
-            tan = np.tan(np.pi * cutoff_frequency / sample_rate)
+        for n in range(len(data_as_ints)):
+            break_frequency = cutoff_frequency[n]
+            tan = np.tan(np.pi * break_frequency / sample_rate)
             a1 = (tan - 1) / (tan + 1) # formula for filtering
-            allpass_output[n] = a1 * data_as_floats[n] + dn_1
-            dn_1 = data_as_floats[n] - a1 * allpass_output[n]
+            allpass_output[n] = a1 * data_as_ints[n] + dn_1
+            dn_1 = data_as_ints[n] - a1 * allpass_output[n]
         
         if highpass:
             allpass_output *= -1 
 
-        filter_output = data_as_floats + allpass_output
-        filter_output *= 0.25 # lower the volume  
-        print(filter_output[:1000])      
+        filter_output = data_as_ints + allpass_output
+
+        filter_output = [int(num * 0.15) for num in filter_output] # lower the volume     
 
         print("filter called")
-        data_as_ints = self._floats2ints(filter_output)
         return self._ints2bytes(filter_output, bytes_per_sample)
-
 
     # unsigned only
     def _bytes2ints(self, data, sample_size):
@@ -304,7 +302,7 @@ class Commander:
         int_list = []
         for i in range(0, len(data), sample_size):
             chunk = data[i:i+4]
-            value = int.from_bytes(chunk, byteorder='little')  # Assuming big-endian byte order
+            value = int.from_bytes(chunk, byteorder='little')
             int_list.append(value)
 
         return int_list
@@ -324,7 +322,7 @@ class Commander:
     def _ints2bytes(self, data, sample_size):
         byte_string = b''
         for num in data:
-            byte_string += num.to_bytes(sample_size, byteorder='little')  # Assuming big-endian byte order
+            byte_string += num.to_bytes(sample_size, byteorder='little', signed=True)
         return byte_string
     
     def _floats2ints(self, data):

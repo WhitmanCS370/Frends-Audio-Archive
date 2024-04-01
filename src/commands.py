@@ -9,6 +9,9 @@ import simpleaudio as sa
 import tempfile
 import wave
 
+import threading
+import numpy as np
+
 # Note: adding this import is not needed for this file but makes the tests work.
 # I don't know why, but I think maybe because if I import src.storage_exceptions in
 # the tests, it doesn't think that storage_exceptions.ExampleError is equal to
@@ -79,7 +82,7 @@ class Commander:
             audio_data, num_channels, bytes_per_sample, sample_rate
         )
         play_obj = wave_obj.play()
-        return play_obj
+        return audio_data, num_channels, bytes_per_sample, sample_rate, play_obj
 
     def playAudioWait(self, name, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None):
         """Plays an audio file and waits for it to be done playing.
@@ -93,9 +96,11 @@ class Commander:
         Raises:
             NameMissing: [name] does not exist in storage.
         """
-        self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec).wait_done()
+        audio_data, num_channels, bytes_per_sample, sample_rate, play_obj = self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
+        play_obj.wait_done()
+        return audio_data, num_channels, bytes_per_sample, sample_rate, play_obj
 
-    def playSequence(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None):
+    def playSequence(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None, save=None):
         """Plays a list of audio files back to back.
 
         Args:
@@ -107,10 +112,23 @@ class Commander:
         Raises:
             NameMissing: There is a name in [names] that does not exist in storage.
         """
+        audio_datas = []
         for name in names:
-            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
+            # combined_sounds += [self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)]
+            audio_data, num_channels, bytes_per_sample, sample_rate, play_obj = self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
+            audio_datas += [(audio_data, num_channels, bytes_per_sample, sample_rate)]
+        
+        if save is None:
+            return
+        
+        # if audio_datas[0][x] for x in range(1, 4) != audio_datas[1][x] for x in range(1, 4):
+        #     raise NotImplementedError("All audio files must have the same sample rate, number of channels, and bytes per sample")
 
-    def playParallel(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None):
+        concatenated_audio_data = np.concatenate([data for data, _, _, _ in audio_datas])
+
+        self.saveAudio(self, save, num_channels, bytes_per_sample, sample_rate, concatenated_audio_data)
+
+    def playParallel(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None, save=None):
         """Plays a list of audio files simultaneously.
 
         Args:
@@ -124,8 +142,9 @@ class Commander:
         """
         play_objs = []
         for name in names:
+            audio_data, num_channels, bytes_per_sample, sample_rate,  = self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
             play_objs.append(
-                self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
+                play_obj
             )
         for play_obj in play_objs:
             play_obj.wait_done()
@@ -165,6 +184,25 @@ class Commander:
         cropped_audio = audio_data[start_frame:end_frame]
 
         return cropped_audio
+    
+    def saveAudio(self, name, num_channels, bytes_per_sample, sample_rate, audio_data):
+        """Saves the edited sound to a file and to the database.
+
+        Args:
+            name: String name of sound.
+            audio_data: bytes of audio data.
+            file_path: String path to save the sound to.
+
+        """
+        print("Saving audio")
+        with wave.open("sounds/output.wav", "wb") as wave_write:
+            wave_write.setnchannels(num_channels)
+            wave_write.setsampwidth(bytes_per_sample)
+            wave_write.setframerate(sample_rate)
+            wave_write.writeframes(audio_data)
+
+        sa.WaveObject.write(name+'.wav', audio_data)
+        self.addSound(self, 'sounds/', name)
 
 
     def getSounds(self):

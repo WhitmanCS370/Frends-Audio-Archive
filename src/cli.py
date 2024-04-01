@@ -172,8 +172,8 @@ class Cli:
             "end_percent": args.end_percent,
             "start_sec": args.start_sec,
             "end_sec": args.end_sec,
-            "save": args.save
-            "transpose": args.transpose
+            "save": args.save,
+            "transpose": args.transpose,
         }
         try:
             if args.parallel:

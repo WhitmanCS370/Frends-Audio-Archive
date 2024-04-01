@@ -72,7 +72,7 @@ class Cli:
         play_parser.add_argument(
             "--save",
             type=str,
-            help="saves the audio to a file instead of playing it.",
+            help="Saves the audio to a file instead of playing it.",
         )
 
         # nargs='+' means that we expect at least one argument
@@ -150,7 +150,7 @@ class Cli:
             "reverse": args.reverse,
             "start_sec": args.start,
             "end_sec": args.end,
-            "save": args.save,
+            "save": args.save
         }
         try:
             if args.parallel:

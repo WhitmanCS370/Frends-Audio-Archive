@@ -35,7 +35,7 @@ class Commander:
         """
         self.storage = storage
 
-    def playAudio(self, name, reverse=False, volume=None, speed=None):
+    def playAudio(self, name, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None):
         """Plays an audio file after applying effects to the sound.
 
         Note that multiple effects can be applied simultaneously.
@@ -72,13 +72,16 @@ class Commander:
             audio_data, num_channels, bytes_per_sample, sample_rate = self._changeSpeed(
                 audio_data, bytes_per_sample, sample_rate, num_channels, speed
             )
+        if start_sec is not None or end_sec is not None:
+            audio_data = self.cropSound(audio_data, sample_rate, start_sec, end_sec)
+
         wave_obj = sa.WaveObject(
             audio_data, num_channels, bytes_per_sample, sample_rate
         )
         play_obj = wave_obj.play()
         return play_obj
 
-    def playAudioWait(self, name, reverse=False, volume=None, speed=None):
+    def playAudioWait(self, name, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None):
         """Plays an audio file and waits for it to be done playing.
 
         Args:
@@ -90,9 +93,9 @@ class Commander:
         Raises:
             NameMissing: [name] does not exist in storage.
         """
-        self.playAudio(name, reverse=reverse, volume=volume, speed=speed).wait_done()
+        self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec).wait_done()
 
-    def playSequence(self, names, reverse=False, volume=None, speed=None):
+    def playSequence(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None):
         """Plays a list of audio files back to back.
 
         Args:
@@ -105,9 +108,9 @@ class Commander:
             NameMissing: There is a name in [names] that does not exist in storage.
         """
         for name in names:
-            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed)
+            self.playAudioWait(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
 
-    def playParallel(self, names, reverse=False, volume=None, speed=None):
+    def playParallel(self, names, reverse=False, volume=None, speed=None, start_sec=None, end_sec=None):
         """Plays a list of audio files simultaneously.
 
         Args:
@@ -122,10 +125,47 @@ class Commander:
         play_objs = []
         for name in names:
             play_objs.append(
-                self.playAudio(name, reverse=reverse, volume=volume, speed=speed)
+                self.playAudio(name, reverse=reverse, volume=volume, speed=speed, start_sec=start_sec, end_sec=end_sec)
             )
         for play_obj in play_objs:
             play_obj.wait_done()
+    
+    def cropSound(self, audio_data, sample_rate, start_sec=None, end_sec=None):
+        """ Returns modiefied audio data for the cropped sound starting at start_sec and ending at end_sec.
+        
+        Args: 
+            audio_data: bytes of audio data
+            sample_rate: int sample rate of audio data
+            start_sec: float start time of cropped audio in seconds
+            end_sec: float end time of cropped audio in seconds
+
+        Raises:
+            ValueError: start must be greater than or equal to 0
+            ValueError: end must be less than or equal to the length of the audio data
+            ValueError: start must be less than the length of the audio data
+            ValueError: start must be less than end
+
+        """
+        start_frame = int(start_sec * sample_rate) if start_sec is not None else 0
+        end_frame = int(end_sec * sample_rate) if end_sec is not None else len(audio_data)
+
+        if start_frame < 0:
+            raise ValueError("Start must be greater than or equal to 0")
+        if end_frame > len(audio_data):
+            raise ValueError("End must be less than or equal to the length of the audio data")
+        if start_frame >= len(audio_data):
+            raise ValueError("Start must be less than the length of the audio data")
+        if start_frame >= end_frame:
+            raise ValueError("Start must be less than end")
+        
+        # print(f"start_frame: {start_frame}")
+        # print(f"end_frame: {end_frame}")
+        # print(f"len(audio_data): {len(audio_data * sample_rate)}")
+
+        cropped_audio = audio_data[start_frame:end_frame]
+
+        return cropped_audio
+
 
     def getSounds(self):
         """Returns all sounds in audio archive.

@@ -57,6 +57,24 @@ class Cli:
             help="float playback volume for audio (default: 1.0)",
         )
 
+        play_parser.add_argument(
+            "--start",
+            type=float,
+            help="start position (seconds) for cropped audio (default: start of the audio file)",
+        )
+
+        play_parser.add_argument(
+            "--end",
+            type=float,
+            help="end position (seconds) for cropped audio (default: end of the audio file)",
+        )
+
+        play_parser.add_argument(
+            "--save",
+            type=str,
+            help="saves the audio to a file instead of playing it.",
+        )
+
         # nargs='+' means that we expect at least one argument
         play_parser.add_argument(
             "names", type=str, nargs="+", help="names of sounds to play"
@@ -130,6 +148,9 @@ class Cli:
             "speed": args.speed,
             "volume": args.volume,
             "reverse": args.reverse,
+            "start_sec": args.start,
+            "end_sec": args.end,
+            "save": args.save,
         }
         try:
             if args.parallel:

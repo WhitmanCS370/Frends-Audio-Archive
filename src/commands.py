@@ -45,6 +45,7 @@ class Commander:
             reverse: Boolean whether to reverse the sound.
             volume: Float volume to play the sound at (1.0 is normal) or None which means don't change the volume.
             speed: Float speed to play the sound at (1.0 is normal) or None which means don't change the speed.
+            transpose: Int amount to transpose by (in semitones, negative values shift downwards)
 
         Returns:
             A PlayObject.

@@ -58,10 +58,41 @@ class Cli:
         )
 
         play_parser.add_argument(
+            "--start_percent",
+            type=float,
+            help="The start position of the audio as a percent. Ranges from 0 to 1, where 0 removes nothing from the start, and 1 removes everything. (default: 0)",
+        )
+
+        play_parser.add_argument(
+            "--end_percent",
+            type=float,
+            help="The end position of the audio as a percent. Ranges from 0 to 1, where 1 removes nothing from the end, and 0 removes everything. (default: 1)",
+        )
+
+        play_parser.add_argument(
+            "--start_sec",
+            type=float,
+            help="The start position (in seconds) to start the audio crop. (default: 0)",
+        )
+
+        play_parser.add_argument(
+            "--end_sec",
+            type=float,
+            help="The end position (in seconds) to end the audio crop. (default: 0)",
+        )
+
+        play_parser.add_argument(
+            "--save",
+            type=str,
+            help="Saves the audio to a file instead of playing it.",
+        )
+        
+        play_parser.add_argument(
             "-t",
             "--transpose",
             type=int,
             help="transposes the sound by n semitones"
+
         )
 
         # nargs='+' means that we expect at least one argument
@@ -137,6 +168,11 @@ class Cli:
             "speed": args.speed,
             "volume": args.volume,
             "reverse": args.reverse,
+            "start_percent": args.start_percent,
+            "end_percent": args.end_percent,
+            "start_sec": args.start_sec,
+            "end_sec": args.end_sec,
+            "save": args.save
             "transpose": args.transpose
         }
         try:

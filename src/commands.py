@@ -100,7 +100,7 @@ class Commander:
             )
 
         if start_sec is not None or end_sec is not None:
-            start_percent, end_percent = self.calculatePercent(
+            start_percent, end_percent = self._calculatePercent(
                 audio_data,
                 bytes_per_sample,
                 num_channels,
@@ -110,7 +110,7 @@ class Commander:
             )
 
         if start_percent is not None or end_percent is not None:
-            audio_data = self.cropSound(
+            audio_data = self._cropSound(
                 audio_data, bytes_per_sample, num_channels, start_percent, end_percent
             )
 
@@ -122,7 +122,7 @@ class Commander:
         if save is not None:
             if save == name:
                 self.removeSound(name)
-            self.saveAudio(
+            self._saveAudio(
                 save, num_channels, audio_data, bytes_per_sample, sample_rate
             )
 
@@ -189,6 +189,7 @@ class Commander:
 
         Raises:
             NameMissing: There is a name in [names] that does not exist in storage.
+            NotImplementedError: Attempting to play and save multiple sounds at once.
         """
         if len(names) > 1 and save is not None:
             raise NotImplementedError("Cannot save multiple sounds at once")
@@ -229,6 +230,7 @@ class Commander:
 
         Raises:
             NameMissing: There is a name in [names] that does not exist in storage.
+            NotImplementedError: Attempting to play and save multiple sounds at once.
         """
         if len(names) > 1 and save is not None:
             raise NotImplementedError("Cannot save multiple sounds at once")
@@ -251,7 +253,7 @@ class Commander:
         for play_obj in play_objs:
             play_obj.wait_done()
 
-    def calculatePercent(
+    def _calculatePercent(
         self,
         audio_data,
         bytes_per_sample,
@@ -292,7 +294,7 @@ class Commander:
 
         return start_percent, end_percent
 
-    def cropSound(
+    def _cropSound(
         self,
         audio_data,
         bytes_per_sample,
@@ -338,7 +340,7 @@ class Commander:
 
         return audio_data[start_index:stop_index]
 
-    def saveAudio(self, name, num_channels, audio_data, bytes_per_sample, sample_rate):
+    def _saveAudio(self, name, num_channels, audio_data, bytes_per_sample, sample_rate):
         """Saves the edited sound to a file and to the database.
 
         Args:

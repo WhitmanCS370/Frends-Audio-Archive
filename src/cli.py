@@ -86,13 +86,9 @@ class Cli:
             type=str,
             help="Saves the audio to a file instead of playing it.",
         )
-        
-        play_parser.add_argument(
-            "-t",
-            "--transpose",
-            type=int,
-            help="transposes the sound by n semitones"
 
+        play_parser.add_argument(
+            "-t", "--transpose", type=int, help="transposes the sound by n semitones"
         )
 
         # nargs='+' means that we expect at least one argument

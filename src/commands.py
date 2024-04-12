@@ -379,6 +379,20 @@ class Commander:
         """
         return self.storage.getByTags(tags)
 
+    def fuzzySearch(self, target, n):
+        """Get n sounds with smallest edit distance when compared to target.
+
+        Args:
+            target: String to search for.
+            n: Int maximum number of sounds to return.
+
+        Returns:
+            A list of AudioMetadata objects in non-descending order of edit distance
+            from target. If there are fewer than n sounds in the archive, all sounds
+            will be returned.
+        """
+        return self.storage.fuzzySearch(target, n)
+
     def rename(self, old_name, new_name):
         """Renames a sound in the archive.
 

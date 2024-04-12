@@ -145,6 +145,20 @@ class StorageCommander:
         """Get all sounds from the storage (as AudioMetadata objects)."""
         return self.database.getAll()
 
+    def fuzzySearch(self, target, n):
+        """Get n sounds with smallest edit distance when compared to target.
+
+        Args:
+            target: String to search for.
+            n: Int maximum number of sounds to return.
+
+        Returns:
+            A list of AudioMetadata objects in non-descending order of edit distance
+            from target. If there are fewer than n sounds in the archive, all sounds
+            will be returned.
+        """
+        return self.database.fuzzySearch(target, n)
+
     def rename(self, old_name, new_name):
         """Rename a sound.
 

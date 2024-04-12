@@ -6,21 +6,6 @@ from audio_metadata import AudioMetadata
 from storage_exceptions import *
 
 
-class SqliteManager:
-    """Provide context manager for working with sqlite database."""
-
-    def __init__(self, db_name):
-        self.db_name = db_name
-
-    def __enter__(self):
-        self.con = sqlite3.connect(self.db_name)
-        self.cur = self.con.cursor()
-        return self
-
-    def __exit__(self, *_args):
-        self.con.close()
-
-
 class Sqlite:
     """Interact with sqlite database for audio archive.
 
@@ -131,6 +116,28 @@ class Sqlite:
             res = m.cur.execute(query).fetchall()
         return [self._recordToAudioMetadata(row) for row in res]
 
+    def fuzzySearch(self, target, n):
+        """Get n sounds with smallest edit distance when compared to target.
+
+        Args:
+            target: String to search for.
+            n: Int maximum number of sounds to return.
+
+        Returns:
+            A list of AudioMetadata objects in non-descending order of edit distance
+            from target. If there are fewer than n sounds in the archive, all sounds
+            will be returned.
+        """
+        # create a list of (edit distance, sound) tuples to sort
+        # I chose to do this rather than providing a key for the sort function to avoid
+        # calling _editDistance for every comparison.
+        sounds = [(_editDistance(sound.name, target), sound) for sound in self.getAll()]
+        sounds.sort(key=lambda sound: sound[0])
+        sounds = [sound[1] for sound in sounds]  # change tuple back to sound
+        if len(sounds) <= n:
+            return sounds
+        return sounds[:n]
+
     def rename(self, old_name, new_name, new_path):
         """Rename a sound.
 
@@ -232,3 +239,40 @@ class Sqlite:
             author=record[6],
             tags=tags,
         )
+
+
+class SqliteManager:
+    """Provide context manager for working with sqlite database."""
+
+    def __init__(self, db_name):
+        self.db_name = db_name
+
+    def __enter__(self):
+        self.con = sqlite3.connect(self.db_name)
+        self.cur = self.con.cursor()
+        return self
+
+    def __exit__(self, *_args):
+        self.con.close()
+
+
+def _editDistance(word1, word2):
+    """Find edit distance from word1 to word2.
+
+    Copy and pasted from https://leetcode.com/problems/edit-distance/submissions/904968575/
+    because why write your own tests when they're there for you 😀
+    """
+    n, m = len(word1), len(word2)
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        dp[i][0] = i
+    for i in range(m + 1):
+        dp[0][i] = i
+
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            if word1[i - 1] == word2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            else:
+                dp[i][j] = min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1
+    return dp[-1][-1]

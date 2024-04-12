@@ -94,6 +94,9 @@ We have written docstrings according to the [Google Style Guide](https://google.
 
 Our project is formatted with [`black`](https://black.readthedocs.io/en/stable/).
 
+We have implemented fuzzy searching to use with our GUI, but our approach will not scale well if someone stores a large number of sounds.
+We may be able to optimize our approach to a certain point, but in order to handle fuzzy searching at a large scale, we would need to switch away from sqlite.
+
 ## Challenges:
 
 One of the biggest challenges for handling the organization and characterization of sounds in this epoch was error handling.

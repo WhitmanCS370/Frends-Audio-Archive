@@ -36,6 +36,7 @@ Writing our storage like this allows us to easily swap out parts, so we have the
 For example, if a user wanted to use cloud database, we could easily create a new class to interact with it satisfying our current database interface.
 
 In order to reduce database queries, we have written the `Storage` to default to checking the provided `cache` to see if a sound exists there first.
+The cache can only handle searches by name.
 A sound is added to the cache any time it is drawn from the database (or created).
 
 Another advantage of our storage design is we can easily create mock objects.

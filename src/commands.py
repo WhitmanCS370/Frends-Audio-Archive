@@ -162,7 +162,8 @@ class Commander:
 
     def calculatePercent(self, audio_data, bytes_per_sample, num_channels, sample_rate, start_sec=None, end_sec=None):
         """Calculates the start and end percent of the audio data based on the start and end seconds.
-            start_sec and end_sec wll both be returned as floats, even if they are not None.
+
+        start_sec and end_sec will both be returned as floats, even if they are not None.
 
         Args: 
             audio_data: bytes of audio data
@@ -192,8 +193,9 @@ class Commander:
 
     
     def cropSound(self, audio_data, bytes_per_sample, num_channels, start_percent=None, end_percent=None):
-        """ Returns modified audio data for the cropped sound starting at start_percent and ending at end_percent.
-            Make the buffer size a multiple of bytes-per-sample and the number of channels.
+        """Returns modified audio data for the cropped sound starting at start_percent and ending at end_percent.
+
+        Make the buffer size a multiple of bytes-per-sample and the number of channels.
         
         Args: 
             audio_data: bytes of audio data
@@ -203,29 +205,24 @@ class Commander:
             end_percent: The end position of the audio as a percent, ranges from 0 to 1.
 
         Raises:
-            ValueError: start_percent is before the start of the audio data
-            ValueError: end_percent is after the end of the audio data
-            ValueError: start must be before than the end of the audio data
-            ValueError: start position must be before the end position
-
+            ValueError: start_percent is greater than end_percent or one of the values is
+                less than 0 or greater than 1.
         """
         # Reset null positions
         if (start_percent is None): start_percent = 0
         if (end_percent is None): end_percent = 1
 
         # Check for invalid values
-        if start_percent < 0:
-            raise ValueError("Start position is before the start of the audio data")
-        if end_percent > 1:
-            raise ValueError("End position is after the end of the audio data")
-        if start_percent >= 1:
-            raise ValueError("Start must be before than the end of the audio data")
+        if min(start_percent, end_percent) < 0 or max(start_percent, end_percent) > 1:
+            raise ValueError("Start and end percent must be between 0 and 1")
         if start_percent >= end_percent:
-            raise ValueError("Start position must be before the end position")
+            raise ValueError("Start must be less than end")
 
         # Calculate start and end indices
-        start_index = int(start_percent * len(audio_data) / (bytes_per_sample * num_channels)) * (bytes_per_sample * num_channels)
-        stop_index = int(end_percent * len(audio_data) / (bytes_per_sample * num_channels)) * (bytes_per_sample * num_channels)
+        def calculate_index(percent):
+            return int(percent * len(audio_data) / (bytes_per_sample * num_channels)) * (bytes_per_sample * num_channels)
+        start_index = calculate_index(start_percent)
+        stop_index = calculate_index(end_percent)
 
         return audio_data[start_index:stop_index]
 
@@ -239,7 +236,7 @@ class Commander:
             file_path: String path to save the sound to.
 
         """
-        path = 'sounds/'+name+'output.wav'
+        path = f'sounds/{name}output.wav'
         with wave.open(path, 'wb') as wave_write:
             wave_write.setnchannels(num_channels)
             wave_write.setsampwidth(bytes_per_sample)

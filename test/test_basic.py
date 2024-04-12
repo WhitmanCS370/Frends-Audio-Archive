@@ -152,6 +152,27 @@ class BasicTests(unittest.TestCase):
         removed_sounds = {sound.name for sound in self.commander.clean()}
         self.assertSetEqual(removed_sounds, {"coffee", "toaster"})
 
+    def test_fuzzySearch(self):
+        self.commander.addSound(Path(self.base_dir, "coffee.wav"))
+        # rename coffee-slurp-[N] to coffee-slurp-[a repeated N times]
+        # this way, the edit distance will be different from coffee-slu
+        for i in range(2, 9):
+            self.commander.addSound(
+                Path(self.base_dir, f"coffee-slurp-{i}.wav"),
+                name=f"coffee-slurp-{'a' * i}",
+            )
+        res = [sound.name for sound in self.commander.fuzzySearch("coffee-", 5)]
+        self.assertListEqual(
+            res,
+            [
+                "coffee",
+                "coffee-slurp-aa",
+                "coffee-slurp-aaa",
+                "coffee-slurp-aaaa",
+                "coffee-slurp-aaaaa",
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

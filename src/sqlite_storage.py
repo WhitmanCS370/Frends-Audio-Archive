@@ -132,7 +132,7 @@ class Sqlite:
         # I chose to do this rather than providing a key for the sort function to avoid
         # calling _editDistance for every comparison.
         sounds = [(_editDistance(sound.name, target), sound) for sound in self.getAll()]
-        sounds.sort()
+        sounds.sort(key=lambda sound: sound[0])
         sounds = [sound[1] for sound in sounds]  # change tuple back to sound
         if len(sounds) <= n:
             return sounds

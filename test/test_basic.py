@@ -4,7 +4,6 @@ import unittest
 from src.sqlite_init import create_db
 from src.commands import *
 from src.constants import *
-from src.dummy_cache import DummyCache
 from src.sqlite_init import *
 from src.sqlite_storage import Sqlite
 from src.storage_commander import StorageCommander
@@ -22,9 +21,7 @@ class BasicTests(unittest.TestCase):
         shutil.copytree(Path("test", "test_sounds"), self.base_dir)
         self.db_name = Path("test", "test_audio_archive.db")
         create_db(str(self.db_name))
-        storage = StorageCommander(
-            DummyCache(), Sqlite(str(self.db_name)), str(self.base_dir)
-        )
+        storage = StorageCommander(Sqlite(str(self.db_name)), str(self.base_dir))
         self.commander = Commander(storage)
 
     def tearDown(self):

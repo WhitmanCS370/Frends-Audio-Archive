@@ -369,8 +369,6 @@ class Commander:
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
 
-        Caches sounds that are not already cached.
-
         Args:
             tags: String list of tags.
 

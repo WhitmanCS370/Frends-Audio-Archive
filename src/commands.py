@@ -424,6 +424,7 @@ class Commander:
         Raises:
             NameExists: [name] is already in the archive.
             FileNotFoundError: [file_path] is not a valid path to a file.
+            ValueError: [name] or [author] is too long.
         """
         return self.storage.addSound(file_path, name=name, author=author)
 
@@ -452,6 +453,7 @@ class Commander:
 
         Raises:
             NameMissing: [name] isn't in the archive.
+            ValueError: [tag] is too long.
         """
         return self.storage.addTag(name, tag)
 

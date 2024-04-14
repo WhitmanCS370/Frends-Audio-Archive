@@ -215,6 +215,8 @@ class Cli:
                 )
         except FileNotFoundError:
             print(f"{args.filename} is not a valid path to a file.")
+        except ValueError as e:
+            print(e)
 
     def _handleRemove(self, args):
         try:
@@ -231,6 +233,8 @@ class Cli:
                     self.commander.addTag(args.name, tag)
         except NameMissing:
             print(f"{args.name} does not exist in the archive.")
+        except ValueError as e:
+            print(e)
 
     def _handleClean(self, _args):
         self.commander.clean()

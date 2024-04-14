@@ -3,6 +3,7 @@ import shutil
 import unittest
 from src.sqlite_init import create_db
 from src.commands import *
+from src.constants import *
 from src.dummy_cache import DummyCache
 from src.sqlite_init import *
 from src.sqlite_storage import Sqlite
@@ -86,6 +87,16 @@ class BasicTests(unittest.TestCase):
         self.assertTrue(self.commander.removeSound("coffee"))
         self.assertFalse(path.exists())
 
+    def test_addSoundNameTooLong(self):
+        path = Path(self.base_dir, "coffee.wav")
+        with self.assertRaises(ValueError):
+            self.commander.addSound(path, name="a" * (MAX_SOUND_NAME_LENGTH + 1))
+
+    def test_addSoundAuthorTooLong(self):
+        path = Path(self.base_dir, "coffee.wav")
+        with self.assertRaises(ValueError):
+            self.commander.addSound(path, author="a" * (MAX_AUTHOR_LENGTH + 1))
+
     def test_removeSoundFail(self):
         # can't remove a sound if it doesn't exist
         with self.assertRaises(NameMissing):
@@ -93,7 +104,8 @@ class BasicTests(unittest.TestCase):
 
     def test_addTag(self):
         addAllSounds(self.base_dir, self.commander)
-        self.commander.addTag("coffee", "example tag")
+        # make sure tags are stripped and made lowercase
+        self.commander.addTag("coffee", "   examPLe tag  ")
         self.commander.addTag("coffee-slurp-2", "example tag")
         audios = self.commander.storage.getByTags(["example tag"])
         names = {audio.name for audio in audios}
@@ -101,10 +113,15 @@ class BasicTests(unittest.TestCase):
 
     def test_removeTag(self):
         addAllSounds(self.base_dir, self.commander)
-        self.commander.addTag("coffee", "example tag")
-        self.commander.removeTag("coffee", "example tag")
+        self.commander.addTag("coffee", "example tAg   ")
+        self.commander.removeTag("coffee", "  exaMple tag ")
         audios = self.commander.storage.getByTags("example tag")
         self.assertEqual(len(audios), 0)
+
+    def test_addTagTooLong(self):
+        addAllSounds(self.base_dir, self.commander)
+        with self.assertRaises(ValueError):
+            self.commander.addTag("coffee", "a" * (MAX_TAG_LENGTH + 1))
 
     def test_renameSuccess(self):
         addAllSounds(self.base_dir, self.commander)

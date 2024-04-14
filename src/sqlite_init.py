@@ -8,26 +8,33 @@ See https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-lim
 
 import sqlite3
 
+from constants import *
+
 
 def create_db(db_name="audio_archive.db"):
     con = sqlite3.connect(db_name)
     cur = con.cursor()
-    create_sounds_table_query = """CREATE TABLE IF NOT EXISTS sounds (
+    # Note: sqlite automatically creates an index for UNIQUE columns so we don't need
+    # to create an index for name.
+    # See https://stackoverflow.com/questions/36879755/no-need-to-create-an-index-on-a-column-with-a-unique-constraint-right
+    # Note: The sqlite3 module would not allow me to use a placeholder value for setting
+    # the VARCHAR length. However, I don't think that using a constant like this creates
+    # any vulnerabilities, so a f-string should be fine.
+    create_sounds_table_query = f"""CREATE TABLE IF NOT EXISTS sounds (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             file_path VARCHAR(260) NOT NULL UNIQUE,
-            name VARCHAR(128) NOT NULL UNIQUE,
+            name VARCHAR({MAX_SOUND_NAME_LENGTH}) NOT NULL UNIQUE,
             duration INTEGER NOT NULL,
             date_added INTEGER NOT NULL,
             last_accessed INTEGER NOT NULL,
-            author VARCHAR(128)
+            author VARCHAR({MAX_AUTHOR_LENGTH})
             );"""
 
-    create_tags_table_query = """CREATE TABLE IF NOT EXISTS tags (
-            tag VARCHAR(128) NOT NULL,
+    create_tags_table_query = f"""CREATE TABLE IF NOT EXISTS tags (
+            tag VARCHAR({MAX_TAG_LENGTH}) NOT NULL,
             sound_id NOT NULL,
             PRIMARY KEY (tag, sound_id),
-            FOREIGN KEY (sound_id)
-            REFERENCES sounds (sound_id)
+            FOREIGN KEY (sound_id) REFERENCES sounds (id)
                 ON DELETE CASCADE
             );"""
     cur.execute(create_sounds_table_query)

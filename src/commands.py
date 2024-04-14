@@ -38,30 +38,14 @@ class Commander:
         """
         self.storage = storage
 
-    def playAudio(
-        self,
-        name,
-        options #playback options
-        # reverse=False,
-        # volume=None,
-        # speed=None,
-        # start_percent=None,
-        # end_percent=None,
-        # start_sec=None,
-        # end_sec=None,
-        # save=None,
-        # transpose=None,
-    ):
+    def playAudio(self, name, options):
         """Plays an audio file after applying effects to the sound.
 
         Note that multiple effects can be applied simultaneously.
 
         Args:
             name: String name of sound.
-            reverse: Boolean whether to reverse the sound.
-            volume: Float volume to play the sound at (1.0 is normal) or None which means don't change the volume.
-            speed: Float speed to play the sound at (1.0 is normal) or None which means don't change the speed.
-            transpose: Int amount to transpose by (in semitones, negative values shift downwards)
+            options: A playback_options object.
 
         Returns:
             A PlayObject.
@@ -98,7 +82,7 @@ class Commander:
             audio_data = audioop.mul(audio_data, bytes_per_sample, options.volume)
         if options.speed is not None and options.speed > 0:
             audio_data, num_channels, bytes_per_sample, sample_rate = self._changeSpeed(
-                audio_data, bytes_per_sample, sample_rate, num_channels, speed
+                audio_data, bytes_per_sample, sample_rate, num_channels, options.speed
             )
 
         if options.start_sec is not None or options.end_sec is not None:
@@ -113,7 +97,11 @@ class Commander:
 
         if options.start_percent is not None or options.end_percent is not None:
             audio_data = self._cropSound(
-                audio_data, bytes_per_sample, num_channels, options.start_percent, options.end_percent
+                audio_data,
+                bytes_per_sample,
+                num_channels,
+                options.start_percent,
+                options.end_percent,
             )
 
         wave_obj = sa.WaveObject(
@@ -130,40 +118,25 @@ class Commander:
 
         return play_obj
 
-    def playAudioWait(
-        self,
-        name,
-        options # playback options
-    ):
+    def playAudioWait(self, name, options):
         """Plays an audio file and waits for it to be done playing.
 
         Args:
             name: String name of sound.
-            reverse: Boolean whether to reverse the sound.
-            volume: Float volume to play the sound at (1.0 is normal) or None which means don't change the volume.
-            speed: Float speed to play the sound at (1.0 is normal) or None which means don't change the speed.
+            options: A playback_options object.
 
         Raises:
             NameMissing: [name] does not exist in storage.
         """
 
-        return self.playAudio(
-            name,
-            options
-        ).wait_done()
+        return self.playAudio(name, options).wait_done()
 
-    def playSequence(
-        self,
-        names,
-        options
-    ):
+    def playSequence(self, names, options):
         """Plays a list of audio files back to back.
 
         Args:
             names: String list names of sounds (played in order of list).
-            reverse: Boolean whether to reverse the sound.
-            volume: Float volume to play the sound at (1.0 is normal) or None which means don't change the volume.
-            speed: Float speed to play the sound at (1.0 is normal) or None which means don't change the speed.
+            options: A playback_options object.
 
         Raises:
             NameMissing: There is a name in [names] that does not exist in storage.
@@ -172,23 +145,14 @@ class Commander:
         if len(names) > 1 and options.save is not None:
             raise NotImplementedError("Cannot save multiple sounds at once")
         for name in names:
-            self.playAudioWait(
-                name,
-                options
-            )
+            self.playAudioWait(name, options)
 
-    def playParallel(
-        self,
-        names,
-        options
-    ):
+    def playParallel(self, names, options):
         """Plays a list of audio files simultaneously.
 
         Args:
             names: String list names of sounds.
-            reverse: Boolean whether to reverse the sound.
-            volume: Float volume to play the sound at (1.0 is normal) or None which means don't change the volume.
-            speed: Float speed to play the sound at (1.0 is normal) or None which means don't change the speed.
+            options: A playback_options object.
 
         Raises:
             NameMissing: There is a name in [names] that does not exist in storage.
@@ -198,12 +162,7 @@ class Commander:
             raise NotImplementedError("Cannot save multiple sounds at once")
         play_objs = []
         for name in names:
-            play_objs.append(
-                self.playAudio(
-                    name,
-                    options
-                )
-            )
+            play_objs.append(self.playAudio(name, options))
         for play_obj in play_objs:
             play_obj.wait_done()
 

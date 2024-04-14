@@ -3,7 +3,6 @@
 import argparse
 import pathlib
 from playback_options import PlaybackOptions
-from dummy_cache import DummyCache
 from commands import *
 from sqlite_storage import Sqlite
 from storage_commander import StorageCommander
@@ -87,12 +86,9 @@ class Cli:
             type=str,
             help="Saves the audio to a file instead of playing it.",
         )
-        
+
         play_parser.add_argument(
-            "-t",
-            "--transpose",
-            type=int,
-            help="transposes the sound by n semitones"
+            "-t", "--transpose", type=int, help="transposes the sound by n semitones"
         )
 
         # nargs='+' means that we expect at least one argument
@@ -165,15 +161,15 @@ class Cli:
 
     def _handlePlay(self, args):
         playback_options = PlaybackOptions(
-            speed = args.speed,
-            volume = args.volume,
-            reverse = args.reverse,
-            start_percent = args.start_percent,
-            end_percent = args.end_percent,
-            start_sec = args.start_sec,
-            end_sec = args.end_sec,
-            save = args.save,
-            transpose = args.transpose
+            speed=args.speed,
+            volume=args.volume,
+            reverse=args.reverse,
+            start_percent=args.start_percent,
+            end_percent=args.end_percent,
+            start_sec=args.start_sec,
+            end_sec=args.end_sec,
+            save=args.save,
+            transpose=args.transpose,
         )
         try:
             if args.parallel:
@@ -219,6 +215,8 @@ class Cli:
                 )
         except FileNotFoundError:
             print(f"{args.filename} is not a valid path to a file.")
+        except ValueError as e:
+            print(e)
 
     def _handleRemove(self, args):
         try:
@@ -235,6 +233,8 @@ class Cli:
                     self.commander.addTag(args.name, tag)
         except NameMissing:
             print(f"{args.name} does not exist in the archive.")
+        except ValueError as e:
+            print(e)
 
     def _handleClean(self, _args):
         self.commander.clean()

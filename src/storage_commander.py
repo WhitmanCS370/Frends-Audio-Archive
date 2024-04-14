@@ -122,6 +122,17 @@ class StorageCommander:
         """
         return self.database.getByName(name)
 
+    def updateLastPlayed(self, name):
+        """Sets the last played time for a sound.
+
+        Args:
+            name: String name of sound.
+
+        Raises:
+            NameMissing: [name] does not exist in the database.
+        """
+        self.database.updateLastPlayed(name, int(time.time()))
+
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
 
@@ -132,6 +143,8 @@ class StorageCommander:
             A list AudioMetadata objects for all sounds associated with the given tags.
         """
         tags = [_processTag(tag) for tag in tags]
+        # remove duplicates
+        tags = list(set(tags))
         return self.database.getByTags(tags)
 
     def getAll(self):

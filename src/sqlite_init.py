@@ -26,7 +26,7 @@ def create_db(db_name="audio_archive.db"):
             name VARCHAR({MAX_SOUND_NAME_LENGTH}) NOT NULL UNIQUE,
             duration INTEGER NOT NULL,
             date_added INTEGER NOT NULL,
-            last_accessed INTEGER NOT NULL,
+            last_played INTEGER,
             author VARCHAR({MAX_AUTHOR_LENGTH})
             );"""
 

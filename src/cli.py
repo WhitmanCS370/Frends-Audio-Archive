@@ -2,7 +2,6 @@
 
 import argparse
 import pathlib
-from dummy_cache import DummyCache
 from commands import *
 from sqlite_storage import Sqlite
 from storage_commander import StorageCommander
@@ -242,7 +241,7 @@ class Cli:
 
 if __name__ == "__main__":
     try:
-        storage = StorageCommander(DummyCache(), Sqlite())
+        storage = StorageCommander(Sqlite())
     except FileNotFoundError as f:
         print(f"Error: {f}")
         print("See README.md for initialization instructions")

@@ -21,7 +21,7 @@ For example, if we want to create another interface, it could maintain a `Comman
 The process for adding a new command involves jumping around more places, but should hopefully still be straightforward.
 
 All commands spawn from `src/commands.py`, so it makes sense to begin by creating a new function in the `Commander` class (which will likely be fairly small).
-If necessary, a new query can be added to the `Storage` class, which can then be implemented in specific database or cache classes.
+If necessary, a new query can be added to the `Storage` class, which can then be implemented in the database class.
 After this, you can extend whichever interface you choose to allow the user to call your new function.
 For example, extending the CLI involves creating a new subparser, adding any arguments and flags, and then creating an _handle[Command] function.
 
@@ -30,16 +30,15 @@ If possible, a new test should be added in the `tests/` directory.
 ## Storage
 
 Our storage design involves two layers.
-Each `Storage` object is created with a `cache` and a `database`.
+Each `Storage` object is created with a `database` object.
 This allows us to swap in parts - for example, we were initially not sure if we wanted to keep a `sqlite` database or a JSON file.
 Writing our storage like this allows us to easily swap out parts, so we have the freedom to swap in different database implementations.
 For example, if a user wanted to use cloud database, we could easily create a new class to interact with it satisfying our current database interface.
 
-In order to reduce database queries, we have written the `Storage` to default to checking the provided `cache` to see if a sound exists there first.
-The cache can only handle searches by name.
-A sound is added to the cache any time it is drawn from the database (or created).
-
-Another advantage of our storage design is we can easily create mock objects.
-For example, our caching strategy does not make sense to use with a command line interface so we created a mock cache (`src/dummy_cache.py`) to be used with the cli (and also tests).
+The `Storage` object handles all interactions unrelated to the database, such as file interactions, normalizing tags, and validating input.
 
 All sounds are stored in a local directory.  We considered storing them in the database, but this would require storing them as binaries.  Note that we default to using `pathlib` for file operations over `os`.
+
+We initially wanted to implement an LRU cache to reduce database queries.
+However, we essentially decided that this would provide little benefit because we would need to update the database every time we played a sound to keep the last played record up to date.
+While we technically could have only updated that information in the cache and had other checks to ensure that the cache and database stayed in sync, we were afraid of the bugs that having our cache and database out of sync might introduce.

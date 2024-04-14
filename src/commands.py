@@ -41,15 +41,16 @@ class Commander:
     def playAudio(
         self,
         name,
-        reverse=False,
-        volume=None,
-        speed=None,
-        start_percent=None,
-        end_percent=None,
-        start_sec=None,
-        end_sec=None,
-        save=None,
-        transpose=None,
+        options #playback options
+        # reverse=False,
+        # volume=None,
+        # speed=None,
+        # start_percent=None,
+        # end_percent=None,
+        # start_sec=None,
+        # end_sec=None,
+        # save=None,
+        # transpose=None,
     ):
         """Plays an audio file after applying effects to the sound.
 
@@ -74,11 +75,11 @@ class Commander:
         if not file_path.is_file():
             raise FileNotFoundError(f"Path not found: {str(file_path)}")
 
-        if transpose:
+        if options.transpose:
             y, sr = librosa.load(file_path)
-            steps = transpose
+            steps = options.transpose
             new_y = librosa.effects.pitch_shift(y, sr=sr, n_steps=steps)
-            file_path = "_.wav"
+            file_path = file_path[:-4] + "_.wav"
             soundfile.write(file_path, new_y, sr)
 
         with wave.open(str(file_path), "rb") as wave_read:
@@ -87,31 +88,31 @@ class Commander:
             bytes_per_sample = wave_read.getsampwidth()
             sample_rate = wave_read.getframerate()
 
-        if transpose:
+        if options.transpose:
             os.remove(file_path)
 
-        if reverse:
+        if options.reverse:
             audio_data = audioop.reverse(audio_data, bytes_per_sample)
-        if volume is not None and volume >= 0:
-            audio_data = audioop.mul(audio_data, bytes_per_sample, volume)
-        if speed is not None and speed > 0:
+        if options.volume is not None and options.volume >= 0:
+            audio_data = audioop.mul(audio_data, bytes_per_sample, options.volume)
+        if options.speed is not None and options.speed > 0:
             audio_data, num_channels, bytes_per_sample, sample_rate = self._changeSpeed(
                 audio_data, bytes_per_sample, sample_rate, num_channels, speed
             )
 
-        if start_sec is not None or end_sec is not None:
-            start_percent, end_percent = self._calculatePercent(
+        if options.start_sec is not None or options.end_sec is not None:
+            options.start_percent, options.end_percent = self._calculatePercent(
                 audio_data,
                 bytes_per_sample,
                 num_channels,
                 sample_rate,
-                start_sec,
-                end_sec,
+                options.start_sec,
+                options.end_sec,
             )
 
-        if start_percent is not None or end_percent is not None:
+        if options.start_percent is not None or options.end_percent is not None:
             audio_data = self._cropSound(
-                audio_data, bytes_per_sample, num_channels, start_percent, end_percent
+                audio_data, bytes_per_sample, num_channels, options.start_percent, options.end_percent
             )
 
         wave_obj = sa.WaveObject(
@@ -119,11 +120,11 @@ class Commander:
         )
         play_obj = wave_obj.play()
 
-        if save is not None:
-            if save == name:
+        if options.save is not None:
+            if options.save == name:
                 self.removeSound(name)
             self._saveAudio(
-                save, num_channels, audio_data, bytes_per_sample, sample_rate
+                options.save, num_channels, audio_data, bytes_per_sample, sample_rate
             )
 
         return play_obj
@@ -131,15 +132,7 @@ class Commander:
     def playAudioWait(
         self,
         name,
-        reverse=False,
-        volume=None,
-        speed=None,
-        start_percent=None,
-        end_percent=None,
-        start_sec=None,
-        end_sec=None,
-        save=None,
-        transpose=None,
+        options # playback options
     ):
         """Plays an audio file and waits for it to be done playing.
 
@@ -155,29 +148,13 @@ class Commander:
 
         return self.playAudio(
             name,
-            reverse=reverse,
-            volume=volume,
-            speed=speed,
-            start_percent=start_percent,
-            end_percent=end_percent,
-            start_sec=start_sec,
-            end_sec=end_sec,
-            save=save,
-            transpose=transpose,
+            options
         ).wait_done()
 
     def playSequence(
         self,
         names,
-        reverse=False,
-        volume=None,
-        speed=None,
-        start_percent=None,
-        end_percent=None,
-        start_sec=None,
-        end_sec=None,
-        save=None,
-        transpose=None,
+        options
     ):
         """Plays a list of audio files back to back.
 
@@ -191,34 +168,18 @@ class Commander:
             NameMissing: There is a name in [names] that does not exist in storage.
             NotImplementedError: Attempting to play and save multiple sounds at once.
         """
-        if len(names) > 1 and save is not None:
+        if len(names) > 1 and options.save is not None:
             raise NotImplementedError("Cannot save multiple sounds at once")
         for name in names:
             self.playAudioWait(
                 name,
-                reverse=reverse,
-                volume=volume,
-                speed=speed,
-                start_percent=start_percent,
-                end_percent=end_percent,
-                start_sec=start_sec,
-                end_sec=end_sec,
-                save=save,
-                transpose=transpose,
+                options
             )
 
     def playParallel(
         self,
         names,
-        reverse=False,
-        volume=None,
-        speed=None,
-        start_percent=None,
-        end_percent=None,
-        start_sec=None,
-        end_sec=None,
-        save=None,
-        transpose=None,
+        options
     ):
         """Plays a list of audio files simultaneously.
 
@@ -232,22 +193,14 @@ class Commander:
             NameMissing: There is a name in [names] that does not exist in storage.
             NotImplementedError: Attempting to play and save multiple sounds at once.
         """
-        if len(names) > 1 and save is not None:
+        if len(names) > 1 and options.save is not None:
             raise NotImplementedError("Cannot save multiple sounds at once")
         play_objs = []
         for name in names:
             play_objs.append(
                 self.playAudio(
                     name,
-                    reverse=reverse,
-                    volume=volume,
-                    speed=speed,
-                    start_percent=start_percent,
-                    end_percent=end_percent,
-                    start_sec=start_sec,
-                    end_sec=end_sec,
-                    save=save,
-                    transpose=transpose,
+                    options
                 )
             )
         for play_obj in play_objs:

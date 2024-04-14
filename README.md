@@ -82,7 +82,6 @@ Tests are written with the built in `unittest` library and can be executed with 
 
 Our automatic tests are located in the `tests/` directory, and we have written tests for as many of our commands as possible.
 There are tests for adding, renaming, and removing sounds as well as tests for adding and removing tags.
-There are also tests for the basic cache operations.
 
 Our audio functions are all tested manually.
 
@@ -105,11 +104,9 @@ Some of the possible problems are the sound might not exist, there might already
 
 Another challenge we faced was copy and pasting docstrings.
 The `Storage Commander` relies upon a database implementation, like the one in `src/sqlite_storage.py`.
-When a user tries to add a sound to the database, the `Commander` calls `self.storage.addSound()` which then adds the sound to both the cache and the database.
+When a user tries to add a sound to the database, the `Commander` calls `self.storage.addSound()` which then validates the input and inserts into the database.
 This means that there is an `addSound` function in the `src/sqlite_storage.py`, `src/storage_commander.py`, and `src/commands.py`, and all of these functions have the same purpose and effectively have the same doc string.
 We are currently questioning if there is a better way to handle the documentation than effectively copy and pasting the same doc string in three different places, or if the commander calling `addSound` which calls `addSound` in the database is a code smell.
-
-Another challenge Faced was with the Cache Testing, as the cache was so quick that it was impossible to really tell what order an eviction would be in, as the time stamp for some cases was arbritrarly small. This was solved by manually setting the timeStamp, but didn't feel super elegant. 
 
 Another challenge was wrestling with WAV encodings and signal processing. The format for these files is really unintuitive, and most documentationassumes a high level of knowledge about signal processing. For example, even for a task like cropping the sound, we had to find a way to inuit orsnap to whatever the nearest audio frame was, although that's not clearly explained in any of the resources we found to explain WAV encodings. Signal processing is a completely different field of encoding than what we've studied in classes like 310.
 

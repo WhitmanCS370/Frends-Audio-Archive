@@ -1,8 +1,4 @@
 """Manage interactions with storage for the audio archive.
-
-This class is needed because we wanted to use an in memory cache as well as a database.
-It manages searching for sounds in the cache when possible and then falling back on
-the database. This class also helps keep the database, cache, and sounds directory in sync.
 """
 
 from pathlib import Path
@@ -21,32 +17,27 @@ def _processTag(tag):
 class StorageCommander:
     """Manage interactions with audio archive storage
 
-    This class exists because we are implementing caching to reduce database queries.
-    Both a cache and database object our provided during construction, and this class
-    handles dispatching commands to the appropriate storage mechanism, as well as
-    keeping the database, cache, and sounds directory in sync.
+    This class functions as a bridge between the commander and database.  There
+    is some processing that must happen before audio metadata is stored, such as
+    moving files around and normalizing tags, and this class handles that.
 
     Attributes:
-        cache: A cache object - ex: cache.py.
         database: A database object - ex: sqlite_storage.py.
         base_directory: A Path to the directory in which sounds are stored.
     """
 
-    def __init__(self, cache, database, base_directory="sounds/"):
+    def __init__(self, database, base_directory="sounds/"):
         """Constructor.
 
         Args:
-            cache: A cache object - ex: cache.py.
             database: A database object - ex: sqlite_storage.py.
             base_directory: A String with a path to the directory in which sounds are stored.
         """
-
-        self.cache = cache
         self.database = database
         self.base_directory = Path(base_directory)
 
     def addSound(self, file_path, name=None, author=None):
-        """Add a sound to the cache and database.
+        """Add a sound to the database.
 
         If the file_path is not in the base_directory, the file is moved to the base_directory.
         If the file_path is in the directory but the stem does not match the name parameter,
@@ -96,11 +87,10 @@ class StorageCommander:
         cur_time = int(time.time())
         self.database.addSound(str(new_path), name, duration, cur_time, author)
         sound = self.getByName(name)
-        self.cache.add(sound)
         return True
 
     def removeSound(self, name):
-        """Remove a sound from the database and cache.
+        """Remove a sound from the database.
 
         This also removes the file from the base_directory.
 
@@ -115,14 +105,11 @@ class StorageCommander:
         """
         sound = self.getByName(name)
         self.database.removeByName(name)
-        self.cache.removeByName(name)
         sound.file_path.unlink(missing_ok=True)  # remove file
         return True
 
     def getByName(self, name):
         """Retrieve a sound from storage.
-
-        Adds to the cache if not already present.
 
         Args:
             name: String name of sound.
@@ -133,17 +120,10 @@ class StorageCommander:
         Raises:
             NameMissing: [name] does not exist in the database.
         """
-        sound = self.cache.getByName(name)
-        if sound is not None:
-            return sound
-        sound = self.database.getByName(name)
-        self.cache.add(sound)
-        return sound
+        return self.database.getByName(name)
 
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
-
-        Caches sounds that are not already cached.
 
         Args:
             tags: String list of tags.
@@ -152,10 +132,7 @@ class StorageCommander:
             A list AudioMetadata objects for all sounds associated with the given tags.
         """
         tags = [_processTag(tag) for tag in tags]
-        sounds = self.database.getByTags(tags)
-        for sound in sounds:
-            self.cache.add(sound)
-        return sounds
+        return self.database.getByTags(tags)
 
     def getAll(self):
         """Get all sounds from the storage (as AudioMetadata objects)."""
@@ -199,7 +176,6 @@ class StorageCommander:
         move(sound.file_path, new_path)
         sound.file_path = new_path
         self.database.rename(old_name, new_name, str(new_path))
-        self.cache.rename(old_name, self.getByName(new_name))
         return True
 
     def addTag(self, name, tag):
@@ -217,7 +193,6 @@ class StorageCommander:
         if len(tag) > MAX_TAG_LENGTH:
             raise ValueError(f"Tag must be shorter than {MAX_TAG_LENGTH} characters.")
         self.database.addTag(name, tag)
-        self._refreshCache(name)
 
     def removeTag(self, name, tag):
         """Remove a tag from a sound.
@@ -231,7 +206,6 @@ class StorageCommander:
         """
         tag = _processTag(tag)
         self.database.removeTag(name, tag)
-        self._refreshCache(name)
 
     def clean(self):
         """Remove all sounds from the database without an associated file.
@@ -247,11 +221,6 @@ class StorageCommander:
                 removed_sounds.append(sound)
 
         return removed_sounds
-
-    def _refreshCache(self, name):
-        """Refresh a stale cache entry by removing it from the cache and reloading it from the database."""
-        self.cache.removeByName(name)
-        self.cache.add(self.database.getByName(name))
 
     def _soundExists(self, name):
         """Returns if a sound exists in the database."""

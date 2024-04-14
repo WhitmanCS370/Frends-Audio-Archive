@@ -16,7 +16,7 @@ class AudioMetadata:
         duration: An integer representing the duration of the sound in seconds.
         author: String author of the sound.
         tags: String set of tags.
-        last_accessed: Integer storing the time that a sound was last accessed (as seconds since epoch).
+        last_played: Integer seconds since epoch since last played.
     """
 
     def __init__(self, **kwargs):
@@ -28,19 +28,15 @@ class AudioMetadata:
             **duration: An integer representing the duration of the sound in seconds.
             **author: String author of the sound.
             **tags: String set of tags.
-            **last_accessed: Integer storing the time that a sound was last accessed (as seconds since epoch).
+            **last_played: Integer seconds since epoch since last played.
         """
-        self.file_path = Path(kwargs["filePath"])
+        self.file_path = Path(kwargs["file_path"])
         self.name = kwargs["name"]
         self.duration = kwargs["duration"]
-        self.date_added = kwargs["dateAdded"]
+        self.date_added = kwargs["date_added"]
+        self.last_played = kwargs["last_played"]
         self.author = kwargs["author"]
         self.tags = kwargs["tags"]
-        self.last_accessed = None
-        self._updateLastAccessed()
-
-    def _updateLastAccessed(self):
-        self.last_accessed = int(time.time())
 
     def __eq__(self, other):
         """Equal dunder method.
@@ -52,14 +48,20 @@ class AudioMetadata:
     def __str__(self):
         """Return string containing information in AudioMetadata object."""
         res = []
+        last_played = (
+            "Never"
+            if self.last_played is None
+            else time.strftime("%c", time.localtime(self.last_played))
+        )
+        date_added = time.strftime("%c", time.localtime(self.date_added))
         for val, name in zip(
             [
                 self.file_path,
                 self.name,
                 self.duration,
-                time.strftime("%c", time.localtime(self.date_added)),
+                date_added,
                 self.author,
-                time.strftime("%c", time.localtime(self.last_accessed)),
+                last_played,
             ],
             [
                 "file path",
@@ -67,7 +69,7 @@ class AudioMetadata:
                 "duration",
                 "date added",
                 "author",
-                "last accessed",
+                "last played",
             ],
         ):
             res.append(f"{name}: {val}")

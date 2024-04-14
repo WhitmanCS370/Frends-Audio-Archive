@@ -71,6 +71,7 @@ class Commander:
             FileNotFoundError: The file path associated with [name] is not a valid file.
         """
         audio = self.storage.getByName(name)
+        self.storage.updateLastPlayed(name)
         file_path = audio.file_path
         if not file_path.is_file():
             raise FileNotFoundError(f"Path not found: {str(file_path)}")

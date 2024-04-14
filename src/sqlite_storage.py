@@ -36,20 +36,17 @@ class Sqlite:
             file_path: String path to sound.
             name: String name of sound.
             duration: Int length of sound (in seconds).
-            date_added: Int number of seconds since epoch.
-            last_accessed: Int number of seconds since epoch.
-            author: String name of author.
+            cur_time: Int seconds since epoch.
+            author: String name of author (optional).
 
         Raises:
             NameExists: [name] already exists in the database.
         """
-        query = """INSERT INTO sounds (file_path, name, duration, date_added, last_accessed, author)
-        VALUES (?, ?, ?, ?, ?, ?);"""
+        query = """INSERT INTO sounds (file_path, name, duration, date_added, author)
+        VALUES (?, ?, ?, ?, ?);"""
         with SqliteManager(self.db_name) as m:
             try:
-                m.cur.execute(
-                    query, (file_path, name, duration, cur_time, cur_time, author)
-                )
+                m.cur.execute(query, (file_path, name, duration, cur_time, author))
                 m.con.commit()
             except sqlite3.IntegrityError as e:
                 raise NameExists(f"{name} already exists in database\n{e}")
@@ -90,18 +87,36 @@ class Sqlite:
             raise NameMissing(f"{name} does not exist in database")
         return self._recordToAudioMetadata(data)
 
+    def updateLastPlayed(self, name, play_time):
+        """Sets the last played time for a sound.
+
+        Args:
+            name: String name of sound.
+            play_time: Integer seconds since epoch.
+
+        Raises:
+            NameMissing: [name] does not exist in the database.
+        """
+        query = """UPDATE sounds
+        SET last_played = ?
+        WHERE name = ?;"""
+        with SqliteManager(self.db_name) as m:
+            m.cur.execute(query, (play_time, name))
+            if m.cur.rowcount == 0:
+                raise NameMissing(f"{name} does not exist in database")
+            m.con.commit()
+
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
 
         Args:
-            tags: String list of tags.
+            tags: String list of tags. Tags should not begin or end with whitespace.
 
         Returns:
             A list AudioMetadata objects for all sounds associated with the given tags.
         """
-        tags = list(set(tags))  # remove duplicates
         tags = ", ".join(tags)
-        query = """SELECT id, file_path, name, duration, date_added, last_accessed, author
+        query = """SELECT id, file_path, name, duration, date_added, last_played, author
         FROM sounds s
         LEFT JOIN tags t ON s.id = t.sound_id
         WHERE t.tag IN (?);"""
@@ -231,11 +246,11 @@ class Sqlite:
         """Convert one row from the sounds table to an AudioMetadata object."""
         tags = self._getTags(record[0])
         return AudioMetadata(
-            filePath=record[1],
+            file_path=record[1],
             name=record[2],
             duration=record[3],
-            dateAdded=record[4],
-            lastAccessed=record[5],
+            date_added=record[4],
+            last_played=record[5],
             author=record[6],
             tags=tags,
         )

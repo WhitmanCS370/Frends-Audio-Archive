@@ -1,15 +1,16 @@
 class PlaybackOptions:
     def __init__(
-            self, 
-            speed, 
-            volume, 
-            reverse, 
-            start_percent, 
-            end_percent, 
-            start_sec, 
-            end_sec, 
-            save, 
-            transpose):
+        self,
+        speed,
+        volume,
+        reverse,
+        start_percent,
+        end_percent,
+        start_sec,
+        end_sec,
+        save,
+        transpose,
+    ):
         self.speed = speed
         self.volume = volume
         self.reverse = reverse
@@ -19,4 +20,3 @@ class PlaybackOptions:
         self.end_sec = end_sec
         self.save = save
         self.transpose = transpose
-

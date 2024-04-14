@@ -9,7 +9,13 @@ from pathlib import Path
 from shutil import copyfile, move
 import time
 import wave
+from constants import *
 from storage_exceptions import *
+
+
+def _processTag(tag):
+    """Strip whitespace and turn to lowercase."""
+    return tag.lower().strip()
 
 
 class StorageCommander:
@@ -58,6 +64,7 @@ class StorageCommander:
         Raises:
             NameExists: [name] is already in the database.
             FileNotFoundError: [file_path] is not a valid path to a file.
+            ValueError: [name] or [author] is too long.
         """
         path = Path(file_path)
         if not path.is_file():
@@ -65,6 +72,14 @@ class StorageCommander:
         if name is None:
             # convert file_path to name of file without extension
             name = path.stem
+        if len(name) > MAX_SOUND_NAME_LENGTH:
+            raise ValueError(
+                f"Sound name must be less than {MAX_SOUND_NAME_LENGTH} characters."
+            )
+        if author is not None and len(author) > MAX_AUTHOR_LENGTH:
+            raise ValueError(
+                f"Author name must be less than {MAX_AUTHOR_LENGTH} characters."
+            )
         if self._soundExists(name):
             raise NameExists(f"{name} already exists")
         new_path = self.base_directory / f"{name}.wav"
@@ -136,6 +151,7 @@ class StorageCommander:
         Returns:
             A list AudioMetadata objects for all sounds associated with the given tags.
         """
+        tags = [_processTag(tag) for tag in tags]
         sounds = self.database.getByTags(tags)
         for sound in sounds:
             self.cache.add(sound)
@@ -195,7 +211,11 @@ class StorageCommander:
 
         Raises:
             NameMissing: [name] isn't in the database.
+            ValueError: [tag] is too long.
         """
+        tag = _processTag(tag)
+        if len(tag) > MAX_TAG_LENGTH:
+            raise ValueError(f"Tag must be shorter than {MAX_TAG_LENGTH} characters.")
         self.database.addTag(name, tag)
         self._refreshCache(name)
 
@@ -209,6 +229,7 @@ class StorageCommander:
         Raises:
             NameMissing: [name] isn't in the database.
         """
+        tag = _processTag(tag)
         self.database.removeTag(name, tag)
         self._refreshCache(name)
 

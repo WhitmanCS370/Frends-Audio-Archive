@@ -182,6 +182,8 @@ class Cli:
             print(f"Error: {e}")
         except FileNotFoundError as e:
             print(f"Error: {e}")
+        except NameExists as e:
+            print(f"{args.save} already exists in the archive - edited version not saved.")
 
     def _handleList(self, args):
         # TODO: Consider a better way to handle filtering by tags.

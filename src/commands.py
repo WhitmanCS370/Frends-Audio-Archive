@@ -4,6 +4,7 @@ sounds, adding sounds to the archive, renaming them, etc.
 
 from audio_edits import edit
 import simpleaudio as sa
+import tempfile
 import wave
 
 # Note: adding this import is not needed for this file but makes the tests work.
@@ -65,9 +66,11 @@ class Commander:
         play_obj = wave_obj.play()
 
         if options.save is not None:
-            if options.save == name:
-                self.removeSound(name)
-            self._saveAudio(options.save, wav_data)
+            try:
+                self._saveWavData(wav_data, options.save)
+            except Exception as e:
+                play_obj.wait_done()
+                raise e
 
         return play_obj
 
@@ -119,23 +122,22 @@ class Commander:
         for play_obj in play_objs:
             play_obj.wait_done()
 
-    def _saveAudio(self, name, wav_data):
+    def _saveWavData(self, wav_data, name):
         """Saves the edited sound to a file and to the database.
 
         Args:
+            wav_data: WavData object.
             name: String name of sound.
-            audio_data: bytes of audio data.
-            file_path: String path to save the sound to.
 
+        Raises:
+            NameExists: [name] already exists in the archive.
+            ValueError: [name] is too long.
         """
-        path = f"sounds/{name}output.wav"
-        with wave.open(path, "wb") as wave_write:
-            wave_write.setnchannels(wav_data.num_channels)
-            wave_write.setsampwidth(wav_data.sample_width)
-            wave_write.setframerate(wav_data.frame_rate)
-            wave_write.writeframes(wav_data.frames)
-
-        self.addSound(path, name)
+        with tempfile.NamedTemporaryFile(suffix=".wav") as f:
+            with wave.open(f.name, "wb") as wav_file:
+                wav_file.setparams(wav_data.params)
+                wav_file.writeframes(wav_data.frames)
+            self.addSound(f.name, name)
 
     def getSounds(self):
         """Returns all sounds in audio archive.

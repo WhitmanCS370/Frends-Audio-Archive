@@ -2,15 +2,9 @@
 sounds, adding sounds to the archive, renaming them, etc.
 """
 
-import audioop
-from pydub import AudioSegment
-from pydub.effects import speedup
+from audio_edits import edit
 import simpleaudio as sa
-import tempfile
 import wave
-import librosa
-import soundfile
-import os
 
 # Note: adding this import is not needed for this file but makes the tests work.
 # I don't know why, but I think maybe because if I import src.storage_exceptions in
@@ -60,61 +54,20 @@ class Commander:
         if not file_path.is_file():
             raise FileNotFoundError(f"Path not found: {str(file_path)}")
 
-        if options.transpose:
-            y, sr = librosa.load(file_path)
-            steps = options.transpose
-            new_y = librosa.effects.pitch_shift(y, sr=sr, n_steps=steps)
-            file_path = file_path[:-4] + "_.wav"
-            soundfile.write(file_path, new_y, sr)
-
-        with wave.open(str(file_path), "rb") as wave_read:
-            audio_data = wave_read.readframes(wave_read.getnframes())
-            num_channels = wave_read.getnchannels()
-            bytes_per_sample = wave_read.getsampwidth()
-            sample_rate = wave_read.getframerate()
-
-        if options.transpose:
-            os.remove(file_path)
-
-        if options.reverse:
-            audio_data = audioop.reverse(audio_data, bytes_per_sample)
-        if options.volume is not None and options.volume >= 0:
-            audio_data = audioop.mul(audio_data, bytes_per_sample, options.volume)
-        if options.speed is not None and options.speed > 0:
-            audio_data, num_channels, bytes_per_sample, sample_rate = self._changeSpeed(
-                audio_data, bytes_per_sample, sample_rate, num_channels, options.speed
-            )
-
-        if options.start_sec is not None or options.end_sec is not None:
-            options.start_percent, options.end_percent = self._calculatePercent(
-                audio_data,
-                bytes_per_sample,
-                num_channels,
-                sample_rate,
-                options.start_sec,
-                options.end_sec,
-            )
-
-        if options.start_percent is not None or options.end_percent is not None:
-            audio_data = self._cropSound(
-                audio_data,
-                bytes_per_sample,
-                num_channels,
-                options.start_percent,
-                options.end_percent,
-            )
+        wav_data = edit(str(file_path), options)
 
         wave_obj = sa.WaveObject(
-            audio_data, num_channels, bytes_per_sample, sample_rate
+            wav_data.frames,
+            wav_data.num_channels,
+            wav_data.sample_width,
+            wav_data.frame_rate,
         )
         play_obj = wave_obj.play()
 
         if options.save is not None:
             if options.save == name:
                 self.removeSound(name)
-            self._saveAudio(
-                options.save, num_channels, audio_data, bytes_per_sample, sample_rate
-            )
+            self._saveAudio(options.save, wav_data)
 
         return play_obj
 
@@ -253,7 +206,7 @@ class Commander:
 
         return audio_data[start_index:stop_index]
 
-    def _saveAudio(self, name, num_channels, audio_data, bytes_per_sample, sample_rate):
+    def _saveAudio(self, name, wav_data):
         """Saves the edited sound to a file and to the database.
 
         Args:
@@ -264,10 +217,10 @@ class Commander:
         """
         path = f"sounds/{name}output.wav"
         with wave.open(path, "wb") as wave_write:
-            wave_write.setnchannels(num_channels)
-            wave_write.setsampwidth(bytes_per_sample)
-            wave_write.setframerate(sample_rate)
-            wave_write.writeframes(audio_data)
+            wave_write.setnchannels(wav_data.num_channels)
+            wave_write.setsampwidth(wav_data.sample_width)
+            wave_write.setframerate(wav_data.frame_rate)
+            wave_write.writeframes(wav_data.frames)
 
         self.addSound(path, name)
 
@@ -387,37 +340,3 @@ class Commander:
             A list of AudioMetadata objects that were removed.
         """
         return self.storage.clean()
-
-    def _changeSpeed(
-        self, audio_data, bytes_per_sample, sample_rate, num_channels, speed
-    ):
-        """Change the speed of a sound."""
-        # source: https://stackoverflow.com/questions/74136596/how-do-i-change-the-speed-of-an-audio-file-in-python-like-in-audacity-without
-        audio = AudioSegment(
-            data=audio_data,
-            sample_width=bytes_per_sample,
-            frame_rate=sample_rate,
-            channels=num_channels,
-        )
-        if speed > 1:
-            audio = speedup(audio, playback_speed=speed)
-        else:
-            altered_audio = audio._spawn(
-                audio.raw_data, overrides={"frame_rate": int(audio.frame_rate * speed)}
-            )
-            audio = altered_audio.set_frame_rate(audio.frame_rate)
-        # if we directly export this as a wav, it's somehow corrupted when we tried to read
-        # it back and play it.
-        # But, if we export it as a mp3, load it, export it as a wav, and then play that,
-        # everything works as intended 💯😁
-        with tempfile.NamedTemporaryFile(suffix=".mp3") as mp3_file:
-            audio.export(mp3_file.name, format="mp3")
-            audio = AudioSegment.from_mp3(mp3_file.name)
-            with tempfile.NamedTemporaryFile(suffix=".wav") as wav_file:
-                audio.export(wav_file.name, format="wav")
-                with wave.open(wav_file.name, "rb") as wave_read:
-                    audio_data = wave_read.readframes(wave_read.getnframes())
-                    num_channels = wave_read.getnchannels()
-                    bytes_per_sample = wave_read.getsampwidth()
-                    sample_rate = wave_read.getframerate()
-        return audio_data, num_channels, bytes_per_sample, sample_rate

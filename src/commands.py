@@ -58,9 +58,9 @@ class Commander:
 
         wave_obj = sa.WaveObject(
             wav_data.frames,
-            wav_data.num_channels,
-            wav_data.sample_width,
-            wav_data.frame_rate,
+            wav_data.params.nchannels,
+            wav_data.params.sampwidth,
+            wav_data.params.framerate,
         )
         play_obj = wave_obj.play()
 
@@ -118,93 +118,6 @@ class Commander:
             play_objs.append(self.playAudio(name, options))
         for play_obj in play_objs:
             play_obj.wait_done()
-
-    def _calculatePercent(
-        self,
-        audio_data,
-        bytes_per_sample,
-        num_channels,
-        sample_rate,
-        start_sec=None,
-        end_sec=None,
-    ):
-        """Calculates the start and end percent of the audio data based on the start and end seconds.
-
-        start_sec and end_sec will both be returned as floats, even if they are not None.
-
-        Args:
-            audio_data: bytes of audio data
-            sample_rate: int sample rate of audio data
-            num_channels: int number of channels in audio data.
-            start_sec: The start position of the audio in seconds.
-            end_sec: The end position of the audio in seconds.
-
-        Raises:
-            None
-        """
-        total_duration_seconds = len(audio_data) / (
-            sample_rate * bytes_per_sample * num_channels
-        )
-
-        # Calculate start percent
-        if start_sec is None:
-            start_percent = 0
-        else:
-            start_percent = start_sec / total_duration_seconds
-
-        # Calculate end percent
-        if end_sec is None:
-            end_percent = 1
-        else:
-            end_percent = end_sec / total_duration_seconds
-
-        return start_percent, end_percent
-
-    def _cropSound(
-        self,
-        audio_data,
-        bytes_per_sample,
-        num_channels,
-        start_percent=None,
-        end_percent=None,
-    ):
-        """Returns modified audio data for the cropped sound starting at start_percent and ending at end_percent.
-
-        Make the buffer size a multiple of bytes-per-sample and the number of channels.
-
-        Args:
-            audio_data: bytes of audio data
-            sample_rate: int sample rate of audio data
-            num_channels: int number of channels in audio data.
-            start_percent: The start position of the audio as a percent, ranges from 0 to 1.
-            end_percent: The end position of the audio as a percent, ranges from 0 to 1.
-
-        Raises:
-            ValueError: start_percent is greater than end_percent or one of the values is
-                less than 0 or greater than 1.
-        """
-        # Reset null positions
-        if start_percent is None:
-            start_percent = 0
-        if end_percent is None:
-            end_percent = 1
-
-        # Check for invalid values
-        if min(start_percent, end_percent) < 0 or max(start_percent, end_percent) > 1:
-            raise ValueError("Start and end percent must be between 0 and 1")
-        if start_percent >= end_percent:
-            raise ValueError("Start must be less than end")
-
-        # Calculate start and end indices
-        def calculate_index(percent):
-            return int(
-                percent * len(audio_data) / (bytes_per_sample * num_channels)
-            ) * (bytes_per_sample * num_channels)
-
-        start_index = calculate_index(start_percent)
-        stop_index = calculate_index(end_percent)
-
-        return audio_data[start_index:stop_index]
 
     def _saveAudio(self, name, wav_data):
         """Saves the edited sound to a file and to the database.

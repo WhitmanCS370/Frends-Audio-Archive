@@ -33,29 +33,34 @@ class Commander:
         """
         self.storage = storage
 
-    def playAudio(self, name, options):
-        """Plays an audio file after applying effects to the sound.
+    def playAudio(self, names, options):
+        """Play a audio files after applying audio effects to them.
 
-        Note that multiple effects can be applied simultaneously.
+        Note that multiple effects can be applied simultaneously and that the
+        edited sound can be saved as a new sound.
 
         Args:
-            name: String name of sound.
+            names: String List names of sounds.
             options: A playback_options object.
 
-        Returns:
-            A PlayObject.
-
         Raises:
-            NameMissing: [name] does not exist in storage.
-            FileNotFoundError: The file path associated with [name] is not a valid file.
+            NameMissing: A sound does not exist in storage.
+            NameExists: options.save is not None and options.save is already in the archive.
+            ValueError: options.save is longer than the maximum length for a sound.
+            FileNotFoundError: The file path associated with a name is not a valid file.
         """
-        audio = self.storage.getByName(name)
-        self.storage.updateLastPlayed(name)
-        file_path = audio.file_path
-        if not file_path.is_file():
-            raise FileNotFoundError(f"Path not found: {str(file_path)}")
+        file_paths = []
+        for name in names:
+            audio = self.storage.getByName(name)
+            file_path = audio.file_path
+            if not file_path.is_file():
+                raise FileNotFoundError(f"Path not found: {str(file_path)}")
+            file_paths.append(str(file_path))
 
-        wav_data = edit(str(file_path), options)
+        for name in names:
+            self.storage.updateLastPlayed(name)
+
+        wav_data = edit(file_paths, options)
 
         wave_obj = sa.WaveObject(
             wav_data.frames,
@@ -72,55 +77,7 @@ class Commander:
                 play_obj.wait_done()
                 raise e
 
-        return play_obj
-
-    def playAudioWait(self, name, options):
-        """Plays an audio file and waits for it to be done playing.
-
-        Args:
-            name: String name of sound.
-            options: A playback_options object.
-
-        Raises:
-            NameMissing: [name] does not exist in storage.
-        """
-
-        return self.playAudio(name, options).wait_done()
-
-    def playSequence(self, names, options):
-        """Plays a list of audio files back to back.
-
-        Args:
-            names: String list names of sounds (played in order of list).
-            options: A playback_options object.
-
-        Raises:
-            NameMissing: There is a name in [names] that does not exist in storage.
-            NotImplementedError: Attempting to play and save multiple sounds at once.
-        """
-        if len(names) > 1 and options.save is not None:
-            raise NotImplementedError("Cannot save multiple sounds at once")
-        for name in names:
-            self.playAudioWait(name, options)
-
-    def playParallel(self, names, options):
-        """Plays a list of audio files simultaneously.
-
-        Args:
-            names: String list names of sounds.
-            options: A playback_options object.
-
-        Raises:
-            NameMissing: There is a name in [names] that does not exist in storage.
-            NotImplementedError: Attempting to play and save multiple sounds at once.
-        """
-        if len(names) > 1 and options.save is not None:
-            raise NotImplementedError("Cannot save multiple sounds at once")
-        play_objs = []
-        for name in names:
-            play_objs.append(self.playAudio(name, options))
-        for play_obj in play_objs:
-            play_obj.wait_done()
+        play_obj.wait_done()
 
     def _saveWavData(self, wav_data, name):
         """Saves the edited sound to a file and to the database.

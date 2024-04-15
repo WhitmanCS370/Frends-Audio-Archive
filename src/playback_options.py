@@ -10,6 +10,7 @@ class PlaybackOptions:
         end_sec,
         save,
         transpose,
+        parallel,
     ):
         """Constructor.
 
@@ -19,6 +20,7 @@ class PlaybackOptions:
             reverse: bool
             start_percent/end_percent: float, 0 <= start_percent < end_percent < 1
             start_sec/end_sec: float >= 0
+            parallel: bool (if true, the sounds will be overlayed, else they will be concatenated)
 
         Raises:
             ValueError: invalid option.
@@ -56,3 +58,4 @@ class PlaybackOptions:
         self.end_sec = end_sec
         self.save = save
         self.transpose = transpose
+        self.parallel = parallel

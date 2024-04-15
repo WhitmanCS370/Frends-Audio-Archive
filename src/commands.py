@@ -58,9 +58,9 @@ class Commander:
 
         wave_obj = sa.WaveObject(
             wav_data.frames,
-            wav_data.num_channels,
-            wav_data.sample_width,
-            wav_data.frame_rate,
+            wav_data.params.nchannels,
+            wav_data.params.sampwidth,
+            wav_data.params.framerate,
         )
         play_obj = wave_obj.play()
 

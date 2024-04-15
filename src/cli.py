@@ -171,11 +171,10 @@ class Cli:
                 end_sec=args.end_sec,
                 save=args.save,
                 transpose=args.transpose,
+                parallel=args.parallel,
             )
-            if args.parallel:
-                self.commander.playParallel(args.names, playback_options)
-            else:
-                self.commander.playSequence(args.names, playback_options)
+            commander.playAudio(args.names, playback_options)
+
         except ValueError as e:
             print(f"Error: {e}")
         except NameMissing as e:
@@ -183,7 +182,9 @@ class Cli:
         except FileNotFoundError as e:
             print(f"Error: {e}")
         except NameExists as e:
-            print(f"{args.save} already exists in the archive - edited version not saved.")
+            print(
+                f"{args.save} already exists in the archive - edited version not saved."
+            )
 
     def _handleList(self, args):
         # TODO: Consider a better way to handle filtering by tags.

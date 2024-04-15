@@ -25,7 +25,20 @@ def _getData(file_path):
         return WavData(wr.readframes(wr.getnframes()), wr.getparams())
 
 
-def edit(file_path, options):
+def edit(file_paths, options):
+    """Applies audio effects to wav file at each file path and then concatenates
+    or overlays edited sounds.
+    Args:
+        file_path: String List file path to wav file.
+        options: PlaybackOptions object.
+    """
+    sounds = [_editSound(file_path, options) for file_path in file_paths]
+    if options.parallel:
+        return _overlay(sounds)
+    return _concatenate(sounds)
+
+
+def _editSound(file_path, options):
     """Applies audio effects to wav file at file_path.
 
     Args:
@@ -64,17 +77,7 @@ def _speed(data, options):
             audio.raw_data, overrides={"frame_rate": int(audio.frame_rate * speed)}
         )
         audio = altered_audio.set_frame_rate(audio.frame_rate)
-    # if we directly export this as a wav, it's somehow corrupted when we tried to read
-    # it back and play it.
-    # But, if we export it as a mp3, load it, export it as a wav, and then play that,
-    # everything works as intended 💯😁
-    with tempfile.TemporaryFile(suffix=".mp3") as mp3_file, tempfile.NamedTemporaryFile(
-        suffix=".wav"
-    ) as wav_file:
-        audio.export(mp3_file, format="mp3")
-        audio = AudioSegment.from_mp3(mp3_file)
-        audio.export(wav_file.name, format="wav")
-        return _getData(wav_file.name)
+    return _audioSegmentToWavData(audio)
 
 
 def _volume(data, options):
@@ -130,6 +133,44 @@ def _cropSound(data, options):
     return WavData(new_data, data.params)
 
 
+def _concatenate(sounds):
+    sounds = [
+        AudioSegment(
+            data=sound.frames,
+            sample_width=sound.params.sampwidth,
+            frame_rate=sound.params.framerate,
+            channels=sound.params.nchannels,
+        )
+        for sound in sounds
+    ]
+    res = sounds[0]
+    for sound in sounds[1:]:
+        res = res.append(sound)
+    return _audioSegmentToWavData(res)
+
+
+def _overlay(sounds):
+    sounds = [
+        AudioSegment(
+            data=sound.frames,
+            sample_width=sound.params.sampwidth,
+            frame_rate=sound.params.framerate,
+            channels=sound.params.nchannels,
+        )
+        for sound in sounds
+    ]
+    res = sounds[0]
+    for sound in sounds[1:]:
+        # we need to check the length because if the overlayed sound is longer
+        # than the original, it is truncated
+        if len(res) >= len(sound):
+            res = res.overlay(sound)
+        else:
+            res = sound.overlay(res)
+
+    return _audioSegmentToWavData(res)
+
+
 def _calculatePercent(
     data,
     start_sec=None,
@@ -156,3 +197,17 @@ def _calculatePercent(
         end_percent = end_sec / total_duration_seconds
 
     return start_percent, end_percent
+
+
+def _audioSegmentToWavData(audio):
+    # if we directly export this as a wav, it's somehow corrupted when we tried to read
+    # it back and play it.
+    # But, if we export it as a mp3, load it, export it as a wav, and then play that,
+    # everything works as intended 💯😁
+    with tempfile.TemporaryFile(suffix=".mp3") as mp3_file, tempfile.NamedTemporaryFile(
+        suffix=".wav"
+    ) as wav_file:
+        audio.export(mp3_file, format="mp3")
+        audio = AudioSegment.from_mp3(mp3_file)
+        audio.export(wav_file.name, format="wav")
+        return _getData(wav_file.name)

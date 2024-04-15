@@ -148,7 +148,7 @@ class Cli:
             description="Remove all sounds from archive that do not have an associated file",
         )
 
-    def execute_command(self):
+    def executeCommand(self):
         """Parses arguments and calls appropriate function to handle command.
 
         This uses a dynamic dispatch by using getattr() to find the function from
@@ -160,22 +160,24 @@ class Cli:
         handle_function(args)
 
     def _handlePlay(self, args):
-        playback_options = PlaybackOptions(
-            speed=args.speed,
-            volume=args.volume,
-            reverse=args.reverse,
-            start_percent=args.start_percent,
-            end_percent=args.end_percent,
-            start_sec=args.start_sec,
-            end_sec=args.end_sec,
-            save=args.save,
-            transpose=args.transpose,
-        )
         try:
+            playback_options = PlaybackOptions(
+                speed=args.speed,
+                volume=args.volume,
+                reverse=args.reverse,
+                start_percent=args.start_percent,
+                end_percent=args.end_percent,
+                start_sec=args.start_sec,
+                end_sec=args.end_sec,
+                save=args.save,
+                transpose=args.transpose,
+            )
             if args.parallel:
                 self.commander.playParallel(args.names, playback_options)
             else:
                 self.commander.playSequence(args.names, playback_options)
+        except ValueError as e:
+            print(f"Error: {e}")
         except NameMissing as e:
             print(f"Error: {e}")
         except FileNotFoundError as e:
@@ -249,4 +251,4 @@ if __name__ == "__main__":
     else:
         commander = Commander(storage)
         cli = Cli(commander)
-        cli.execute_command()
+        cli.executeCommand()

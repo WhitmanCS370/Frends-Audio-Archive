@@ -27,6 +27,7 @@ def create_db(db_name="audio_archive.db"):
             duration INTEGER NOT NULL,
             date_added INTEGER NOT NULL,
             last_played INTEGER,
+            play_count INTEGER DEFAULT 0 NOT NULL,
             author VARCHAR({MAX_AUTHOR_LENGTH})
             );"""
 

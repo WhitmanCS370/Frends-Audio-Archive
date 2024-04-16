@@ -17,6 +17,7 @@ class AudioMetadata:
         author: String author of the sound.
         tags: String set of tags.
         last_played: Integer seconds since epoch since last played.
+        play_count: Integer number of times the sound has been played.
     """
 
     def __init__(self, **kwargs):
@@ -29,6 +30,7 @@ class AudioMetadata:
             **author: String author of the sound.
             **tags: String set of tags.
             **last_played: Integer seconds since epoch since last played.
+            **play_count: Integer number of times the sound has been played.
         """
         self.file_path = Path(kwargs["file_path"])
         self.name = kwargs["name"]
@@ -37,6 +39,7 @@ class AudioMetadata:
         self.last_played = kwargs["last_played"]
         self.author = kwargs["author"]
         self.tags = kwargs["tags"]
+        self.play_count = kwargs["play_count"]
 
     def __eq__(self, other):
         """Equal dunder method.
@@ -62,6 +65,7 @@ class AudioMetadata:
                 date_added,
                 self.author,
                 last_played,
+                self.play_count
             ],
             [
                 "file path",
@@ -70,6 +74,7 @@ class AudioMetadata:
                 "date added",
                 "author",
                 "last played",
+                "play count",
             ],
         ):
             res.append(f"{name}: {val}")

@@ -140,6 +140,18 @@ class StorageCommander:
         """
         self.database.updateLastPlayed(name, int(time.time()))
 
+    def incrementPlayCount(self, name):
+        """Increases the play count for a sound by 1.
+
+        Args:
+            name: String name of sound.
+
+        Raises:
+            NameMissing: [name] does not exist in the database.
+        """
+        self.database.incrementPlayCount(name)
+
+
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
 

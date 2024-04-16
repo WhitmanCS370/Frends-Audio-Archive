@@ -106,6 +106,24 @@ class Sqlite:
                 raise NameMissing(f"{name} does not exist in database")
             m.con.commit()
 
+    def incrementPlayCount(self, name):
+        """Increases the play count for a sound by 1.
+
+        Args:
+            name: String name of sound.
+
+        Raises:
+            NameMissing: [name] does not exist in the database.
+        """
+        query = """UPDATE sounds
+        SET play_count = (SELECT play_count FROM sounds WHERE name = ?) + 1
+        WHERE name = ?;"""
+        with SqliteManager(self.db_name) as m:
+            m.cur.execute(query, (name, name))
+            if m.cur.rowcount == 0:
+                raise NameMissing(f"{name} does not exist in database")
+            m.con.commit()
+
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
 
@@ -251,7 +269,8 @@ class Sqlite:
             duration=record[3],
             date_added=record[4],
             last_played=record[5],
-            author=record[6],
+            play_count=record[6],
+            author=record[7],
             tags=tags,
         )
 

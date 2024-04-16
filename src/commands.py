@@ -59,6 +59,7 @@ class Commander:
 
         for name in names:
             self.storage.updateLastPlayed(name)
+            self.storage.incrementPlayCount(name)
 
         wav_data = edit(file_paths, options)
 

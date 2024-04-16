@@ -161,6 +161,7 @@ class Commander:
             NameExists: [name] is already in the archive.
             FileNotFoundError: [file_path] is not a valid path to a file.
             ValueError: [name] or [author] is too long.
+            pydub.exceptions.CouldntDecodeError: Unsupported file format.
         """
         return self.storage.addSound(file_path, name=name, author=author)
 

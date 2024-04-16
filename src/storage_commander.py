@@ -1,7 +1,10 @@
 """Manage interactions with storage for the audio archive.
 """
 
+import tempfile
 from pathlib import Path
+import soundfile
+from pydub import AudioSegment
 from shutil import copyfile, move
 import time
 import wave
@@ -56,6 +59,7 @@ class StorageCommander:
             NameExists: [name] is already in the database.
             FileNotFoundError: [file_path] is not a valid path to a file.
             ValueError: [name] or [author] is too long.
+            pydub.exceptions.CouldntDecodeError: Unsupported file format.
         """
         path = Path(file_path)
         if not path.is_file():
@@ -73,11 +77,15 @@ class StorageCommander:
             )
         if self._soundExists(name):
             raise NameExists(f"{name} already exists")
+
         new_path = self.base_directory / f"{name}.wav"
 
         if new_path != path:
-            # copy file if we're adding it from outside sounds/
-            if path.parent != self.base_directory:
+            if path.suffix != ".wav":
+                self._convertToWavAndAdd(path, new_path)
+            elif (
+                path.parent != self.base_directory
+            ):  # copy file if we're adding it from outside sounds/
                 copyfile(path, new_path)
             else:  # if it's already in the sounds/ directory, move the file
                 move(path, new_path)
@@ -86,7 +94,6 @@ class StorageCommander:
             duration = int(wave_read.getnframes() / wave_read.getframerate())
         cur_time = int(time.time())
         self.database.addSound(str(new_path), name, duration, cur_time, author)
-        sound = self.getByName(name)
         return True
 
     def removeSound(self, name):
@@ -242,3 +249,18 @@ class StorageCommander:
             return True
         except NameMissing:
             return False
+
+    def _convertToWavAndAdd(self, path, new_path):
+        """Converts a sound file to a wav and moves it to the base directory.
+
+        ffmpeg is needed for most file formats.
+
+        Args:
+            path: Path object leading to sound.
+            new_path: New path to put sound at.
+        """
+        audio = AudioSegment.from_file(path)
+        with tempfile.NamedTemporaryFile(suffix=".wav") as f:
+            audio.export(f.name, format="wav")
+            data, samplerate = soundfile.read(f.name)
+            soundfile.write(str(new_path), data, samplerate)

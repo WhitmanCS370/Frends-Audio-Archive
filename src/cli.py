@@ -3,6 +3,7 @@
 import argparse
 import pathlib
 from playback_options import PlaybackOptions
+from pydub.exceptions import CouldntDecodeError
 from commands import *
 from sqlite_storage import Sqlite
 from storage_commander import StorageCommander
@@ -222,6 +223,10 @@ class Cli:
             print(f"{args.filename} is not a valid path to a file.")
         except ValueError as e:
             print(e)
+        except CouldntDecodeError:
+            print(
+                f"Error: Unsupported file format. ffmpeg is required for many file formats."
+            )
 
     def _handleRemove(self, args):
         try:

@@ -1,0 +1,68 @@
+#: kivy 2.3.0
+
+<Search>:
+    query: str(query.text)
+
+    BoxLayout:
+        id: boxlayout
+        orientation: 'vertical'
+        padding: 50
+        spacing: 10
+        size: root.size
+        height: self.parent.height
+        pos_hint: {'y': 0.5, 'top': 0.5}
+        Label:
+            text: "Johns Frends Search"
+            font_size: 50
+        TextInput:
+            id: query
+            hint_text: 'search here'
+            size: root.width /2., 10
+            font_size: 60
+            base_direction: 'ltr'
+            halign: 'left'
+            multiline: False
+            # fuzzy search should listen for keyboard_on_key_up(window, keycode)
+        
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: 20
+            size: self.parent.width, self.parent.height
+            
+            LabeledCheckbox:
+                text: "name"
+                elemsize: 120
+            LabeledCheckbox:
+                text: "tag"
+                elemsize: 60
+            
+        Button:
+            id: btnSearch
+            text: "Search"
+            on_press: root.search_sound()
+        
+<LabeledCheckbox>:
+    orientation: 'horizontal'
+
+    Spacer:
+        size_hint: 1, .3
+    CheckBox:
+        id: checkbox
+        size_hint: 1, .2
+        size: root.elemsize, root.elemsize  # Set size of the checkbox
+    
+    Label:
+        id: label
+        text: root.text
+        size_hint: 1, .2
+        height: root.elemsize  # Match the height of the checkbox
+    Spacer:
+        size_hint: 1, .3
+
+<Spacer>:
+    canvas:
+        Color:
+            rgba: 1, 1, 1, 0
+        Rectangle:
+            pos: self.pos
+            size: self.size

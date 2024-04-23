@@ -10,7 +10,7 @@
         spacing: 10
         size: root.size
         height: self.parent.height
-        pos_hint: {'y': 0.5, 'top': 0.5}
+        #pos_hint: {'y': 0.5, 'top': 0.5}
         Label:
             text: "Johns Frends Search"
             font_size: 50
@@ -20,7 +20,7 @@
             size: root.width /2., 10
             font_size: 60
             base_direction: 'ltr'
-            halign: 'left'
+            halign: 'center'
             multiline: False
             # fuzzy search should listen for keyboard_on_key_up(window, keycode)
         
@@ -30,9 +30,11 @@
             size: self.parent.width, self.parent.height
             
             LabeledCheckbox:
+                id: namebox
                 text: "name"
                 elemsize: 120
             LabeledCheckbox:
+                id: tagbox
                 text: "tag"
                 elemsize: 60
             
@@ -47,7 +49,8 @@
     Spacer:
         size_hint: 1, .3
     CheckBox:
-        id: checkbox
+        id: check
+        active: root.is_active
         size_hint: 1, .2
         size: root.elemsize, root.elemsize  # Set size of the checkbox
     
@@ -66,3 +69,13 @@
         Rectangle:
             pos: self.pos
             size: self.size
+
+<SearchResult>:
+    canvas:
+        Color:
+            rgba: (255, 255, 0)
+        Rectangle:
+            size: self.size
+            Color:
+                rgba: (255, 255, 0, .5)
+

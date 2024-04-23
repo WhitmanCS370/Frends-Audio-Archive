@@ -71,10 +71,11 @@
             size: self.size
 
 <SearchResult>:
-    canvas:
-        Color:
-            rgba: (255, 255, 0)
-        Rectangle:
-            size: self.size
-            Color:
-                rgba: (255, 255, 0, .5)
+    BoxLayout:
+        orientation:'vertical'
+    Label:
+        text: "one"
+    Label:
+        text:'two'
+    Label:
+        text:'three'

@@ -134,7 +134,7 @@ class Sqlite:
             A list AudioMetadata objects for all sounds associated with the given tags.
         """
         tags = ", ".join(tags)
-        query = """SELECT id, file_path, name, duration, date_added, last_played, author
+        query = """SELECT *
         FROM sounds s
         LEFT JOIN tags t ON s.id = t.sound_id
         WHERE t.tag IN (?);"""

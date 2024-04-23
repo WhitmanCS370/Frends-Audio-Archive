@@ -11,6 +11,7 @@ from pydub.effects import speedup
 import soundfile
 import tempfile
 import wave
+from pathlib import Path
 
 
 class WavData:
@@ -204,10 +205,15 @@ def _audioSegmentToWavData(audio):
     # it back and play it.
     # But, if we export it as a mp3, load it, export it as a wav, and then play that,
     # everything works as intended 💯😁
-    with tempfile.TemporaryFile(suffix=".mp3") as mp3_file, tempfile.NamedTemporaryFile(
-        suffix=".wav"
-    ) as wav_file:
-        audio.export(mp3_file, format="mp3")
-        audio = AudioSegment.from_mp3(mp3_file)
-        audio.export(wav_file.name, format="wav")
-        return _getData(wav_file.name)
+
+    # We originally wanted to use tempfile.NamedTemporaryFile but that has issues
+    # on windows. See discussion on stack overflow here:
+    # https://stackoverflow.com/questions/23212435/permission-denied-to-write-to-my-temporary-file
+    with tempfile.TemporaryDirectory() as temp_dir:
+        mp3_path = str(Path(temp_dir, "mp3_sound.mp3"))
+        wav_path = str(Path(temp_dir, "wav_sound.wav"))
+        with open(mp3_path, "w+"), open(wav_path, "w+"):
+            audio.export(mp3_path, format="mp3")
+            audio = AudioSegment.from_mp3(mp3_path)
+            audio.export(wav_path, format="wav")
+            return _getData(wav_path)

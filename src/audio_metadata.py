@@ -65,7 +65,7 @@ class AudioMetadata:
                 date_added,
                 self.author,
                 last_played,
-                self.play_count
+                self.play_count,
             ],
             [
                 "file path",

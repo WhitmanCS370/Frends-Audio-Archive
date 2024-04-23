@@ -151,7 +151,6 @@ class StorageCommander:
         """
         self.database.incrementPlayCount(name)
 
-
     def getByTags(self, tags):
         """Get all sounds associated with the given tags.
 

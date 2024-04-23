@@ -11,24 +11,27 @@ from src.playback_options import PlaybackOptions
 import time
 from threading import Thread
 
+
 def addAllSounds(base_dir, commander):
     for path in Path(base_dir).iterdir():
         commander.addSound(path)
-        
-class customThread():
-    
+
+
+class customThread:
+
     def __init__(self):
         self.value = None
-        
+
     def setThreadedValue(self, value):
         self.value = value
-        
+
     def getThreadedValue(self):
         return self.value
 
-class Test_GUI():
-    
-    #setup database and commander w/ default sound options
+
+class Test_GUI:
+
+    # setup database and commander w/ default sound options
     def __init__(self):
         self.base_dir = Path("test", "temp_test_sounds")
         shutil.copytree(Path("test", "test_sounds"), self.base_dir)
@@ -37,42 +40,46 @@ class Test_GUI():
         storage = StorageCommander(Sqlite(str(self.db_name)), str(self.base_dir))
         self.commander = Commander(storage)
         addAllSounds(self.base_dir, self.commander)
-        self.defaultOptions = PlaybackOptions(speed = None,
-                                volume = None,
-                                reverse = None,
-                                start_percent = None,
-                                end_percent = None,
-                                start_sec = None,
-                                end_sec = None,
-                                save = None,
-                                transpose = None,
-                                parallel = None)
-    
-    #remove directories
+        self.defaultOptions = PlaybackOptions(
+            speed=None,
+            volume=None,
+            reverse=None,
+            start_percent=None,
+            end_percent=None,
+            start_sec=None,
+            end_sec=None,
+            save=None,
+            transpose=None,
+            parallel=None,
+        )
+
+    # remove directories
     def stopTesting(self):
         Path(self.db_name).unlink()
         shutil.rmtree(self.base_dir)
-    
-    #Threaded instance of the play menu will show up, can progress to the next
-    #test on window close
+
+    # Threaded instance of the play menu will show up, can progress to the next
+    # test on window close
     def testPlayMenu(self, soundsToPlay):
-        sounds =  self.commander.getSounds()
+        sounds = self.commander.getSounds()
         print("printing names...")
         for sound in sounds:
             print(sound)
         custom = customThread()
-        thread = Thread(target = playMenu, args = (soundsToPlay, self.commander, self.defaultOptions, custom))
+        thread = Thread(
+            target=playMenu,
+            args=(soundsToPlay, self.commander, self.defaultOptions, custom),
+        )
         thread.start()
         time.sleep(3)
         thread.join()
         app = custom.getThreadedValue()
         app.stop()
         self.stopTesting()
-        
-        
+
+
 if __name__ == "__main__":
     tester = Test_GUI()
     tester.testPlayMenu(["coffee", "coffee-slurp-6", "toaster", "coffee-slurp-2"])
-    #more tests could go here, they should play one at a time, progressing on tab close
+    # more tests could go here, they should play one at a time, progressing on tab close
     print("goodbye")
-    

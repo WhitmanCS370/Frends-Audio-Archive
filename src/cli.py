@@ -174,7 +174,7 @@ class Cli:
                 transpose=args.transpose,
                 parallel=args.parallel,
             )
-            commander.playAudio(args.names, playback_options)
+            self.commander.playAudio(args.names, playback_options)
 
         except ValueError as e:
             print(f"Error: {e}")
@@ -190,16 +190,16 @@ class Cli:
     def _handleList(self, args):
         # TODO: Consider a better way to handle filtering by tags.
         if len(args.tags) == 0:
-            sounds = self.commander.getSounds()
+            sounds = self.commander.storage.getAll()
         else:
-            sounds = self.commander.getByTags(args.tags)
+            sounds = self.commander.storage.getByTags(args.tags)
 
         for sound in sounds:
             print(sound)
 
     def _handleRename(self, args):
         try:
-            self.commander.rename(str(args.name), str(args.new_name))
+            self.commander.storage.rename(str(args.name), str(args.new_name))
         except NameMissing:
             print(f"{str(args.name)} does not exist in the archive.")
         except NameExists:
@@ -209,7 +209,7 @@ class Cli:
 
     def _handleAdd(self, args):
         try:
-            self.commander.addSound(args.filename, args.name)
+            self.commander.storage.addSound(args.filename, args.name)
         except NameExists:
             if args.name is None:
                 print(
@@ -230,7 +230,7 @@ class Cli:
 
     def _handleRemove(self, args):
         try:
-            self.commander.removeSound(args.name)
+            self.commander.storage.removeSound(args.name)
         except NameMissing:
             print(f"{args.name} does not exist in the archive.")
 
@@ -238,16 +238,16 @@ class Cli:
         try:
             for tag in args.tags:
                 if args.remove:
-                    self.commander.removeTag(args.name, tag)
+                    self.commander.storage.removeTag(args.name, tag)
                 else:
-                    self.commander.addTag(args.name, tag)
+                    self.commander.storage.addTag(args.name, tag)
         except NameMissing:
             print(f"{args.name} does not exist in the archive.")
         except ValueError as e:
             print(e)
 
     def _handleClean(self, _args):
-        self.commander.clean()
+        self.commander.storage.clean()
 
 
 if __name__ == "__main__":

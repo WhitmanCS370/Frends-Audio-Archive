@@ -7,6 +7,9 @@ import simpleaudio as sa
 import tempfile
 import wave
 
+from storage_commander import StorageCommander
+from sqlite_storage import Sqlite
+
 # Note: adding this import is not needed for this file but makes the tests work.
 # I don't know why, but I think maybe because if I import src.storage_exceptions in
 # the tests, it doesn't think that storage_exceptions.ExampleError is equal to
@@ -25,13 +28,17 @@ class Commander:
         storage: A Storage object.
     """
 
-    def __init__(self, storage):
-        """Constructor.
+    def __init__(self, sounds_directory="sounds/", database_path="audio_archive.db"):
+        """Constructor. Creates a storage object.
 
-        Attributes:
-            storage: A Storage object
+        Args:
+            sounds_directory: String path to directory containing archive sounds.
+            database_path: String name of database file.
+
+        Raises:
+            FileNotFoundError: Not able to connect to the database.
         """
-        self.storage = storage
+        self.storage = StorageCommander(Sqlite(database_path), sounds_directory)
 
     def playAudio(self, names, options):
         """Play a audio files after applying audio effects to them.

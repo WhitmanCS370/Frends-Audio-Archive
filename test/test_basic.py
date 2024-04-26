@@ -5,8 +5,6 @@ from src.sqlite_init import create_db
 from src.commander import *
 from src.constants import *
 from src.sqlite_init import *
-from src.sqlite_storage import Sqlite
-from src.storage_commander import StorageCommander
 
 
 def addAllSounds(base_dir, commander):
@@ -21,8 +19,9 @@ class BasicTests(unittest.TestCase):
         shutil.copytree(Path("test", "test_sounds"), self.base_dir)
         self.db_name = Path("test", "test_audio_archive.db")
         create_db(str(self.db_name))
-        storage = StorageCommander(Sqlite(str(self.db_name)), str(self.base_dir))
-        self.commander = Commander(storage)
+        self.commander = Commander(
+            sounds_directory=str(self.base_dir), database_path=str(self.db_name)
+        )
 
     def tearDown(self):
         Path(self.db_name).unlink()

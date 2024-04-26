@@ -252,11 +252,10 @@ class Cli:
 
 if __name__ == "__main__":
     try:
-        storage = StorageCommander(Sqlite())
+        commander = Commander()
     except FileNotFoundError as f:
         print(f"Error: {f}")
         print("See README.md for initialization instructions")
     else:
-        commander = Commander(storage)
         cli = Cli(commander)
         cli.executeCommand()

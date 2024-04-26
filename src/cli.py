@@ -4,7 +4,7 @@ import argparse
 import pathlib
 from playback_options import PlaybackOptions
 from pydub.exceptions import CouldntDecodeError
-from commands import *
+from commander import *
 from sqlite_storage import Sqlite
 from storage_commander import StorageCommander
 

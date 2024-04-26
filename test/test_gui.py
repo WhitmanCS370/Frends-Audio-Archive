@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 from src.sqlite_init import create_db
-from src.commands import *
+from src.commander import *
 from src.constants import *
 from src.sqlite_init import *
 from src.sqlite_storage import Sqlite

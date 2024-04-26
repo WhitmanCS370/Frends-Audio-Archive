@@ -80,7 +80,7 @@ class StorageCommander:
 
         new_path = self.base_directory / f"{name}.wav"
 
-        if new_path != path:
+        if not path.samefile(new_path):  # new_path != path:
             if path.suffix != ".wav":
                 self._convertToWavAndAdd(path, new_path)
             elif (

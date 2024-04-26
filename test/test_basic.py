@@ -11,7 +11,7 @@ from src.storage_commander import StorageCommander
 
 def addAllSounds(base_dir, commander):
     for path in Path(base_dir).iterdir():
-        commander.addSound(path)
+        commander.storage.addSound(path)
 
 
 class BasicTests(unittest.TestCase):
@@ -29,14 +29,14 @@ class BasicTests(unittest.TestCase):
         shutil.rmtree(self.base_dir)
 
     def test_addSoundInDirSameName(self):
-        self.commander.addSound(Path(self.base_dir, "coffee.wav"))
+        self.commander.storage.addSound(Path(self.base_dir, "coffee.wav"))
         sound = self.commander.storage.getByName("coffee")
         # the new sound should be in the database
         self.assertEqual(sound.name, "coffee")
         self.assertTrue(sound.file_path.exists())
 
     def test_addSoundInDirNewName(self):
-        self.commander.addSound(Path(self.base_dir, "coffee.wav"), "new_sound")
+        self.commander.storage.addSound(Path(self.base_dir, "coffee.wav"), "new_sound")
         sound = self.commander.storage.getByName("new_sound")
         # the new sound should be in the database
         self.assertEqual(sound.name, "new_sound")
@@ -48,7 +48,7 @@ class BasicTests(unittest.TestCase):
     def test_addSoundOtherDirSameName(self):
         old_path = Path("test_sound.wav")
         shutil.move(Path(self.base_dir, "coffee.wav"), old_path)
-        self.commander.addSound(old_path)
+        self.commander.storage.addSound(old_path)
         sound = self.commander.storage.getByName("test_sound")
         # the new sound should be in the database
         self.assertEqual(sound.name, "test_sound")
@@ -61,7 +61,7 @@ class BasicTests(unittest.TestCase):
     def test_addSoundOtherDirNewName(self):
         old_path = Path("test_sound.wav")
         shutil.move(Path(self.base_dir, "coffee.wav"), old_path)
-        self.commander.addSound(old_path, "new_sound")
+        self.commander.storage.addSound(old_path, "new_sound")
         sound = self.commander.storage.getByName("new_sound")
         # the new sound should be in the database
         self.assertEqual(sound.name, "new_sound")
@@ -74,55 +74,57 @@ class BasicTests(unittest.TestCase):
     def test_addSoundAlreadyExists(self):
         path = Path(self.base_dir, "coffee.wav")
         # we should be able to add this the first time but not the second
-        self.assertTrue(self.commander.addSound(path))
+        self.assertTrue(self.commander.storage.addSound(path))
         with self.assertRaises(NameExists):
-            self.commander.addSound(path)
+            self.commander.storage.addSound(path)
 
     def test_removeSoundSuccess(self):
         path = Path(self.base_dir, "coffee.wav")
-        self.commander.addSound(path)
-        self.assertTrue(self.commander.removeSound("coffee"))
+        self.commander.storage.addSound(path)
+        self.assertTrue(self.commander.storage.removeSound("coffee"))
         self.assertFalse(path.exists())
 
     def test_addSoundNameTooLong(self):
         path = Path(self.base_dir, "coffee.wav")
         with self.assertRaises(ValueError):
-            self.commander.addSound(path, name="a" * (MAX_SOUND_NAME_LENGTH + 1))
+            self.commander.storage.addSound(
+                path, name="a" * (MAX_SOUND_NAME_LENGTH + 1)
+            )
 
     def test_addSoundAuthorTooLong(self):
         path = Path(self.base_dir, "coffee.wav")
         with self.assertRaises(ValueError):
-            self.commander.addSound(path, author="a" * (MAX_AUTHOR_LENGTH + 1))
+            self.commander.storage.addSound(path, author="a" * (MAX_AUTHOR_LENGTH + 1))
 
     def test_removeSoundFail(self):
         # can't remove a sound if it doesn't exist
         with self.assertRaises(NameMissing):
-            self.commander.removeSound("coffee")
+            self.commander.storage.removeSound("coffee")
 
     def test_addTag(self):
         addAllSounds(self.base_dir, self.commander)
         # make sure tags are stripped and made lowercase
-        self.commander.addTag("coffee", "   examPLe tag  ")
-        self.commander.addTag("coffee-slurp-2", "example tag")
+        self.commander.storage.addTag("coffee", "   examPLe tag  ")
+        self.commander.storage.addTag("coffee-slurp-2", "example tag")
         audios = self.commander.storage.getByTags(["example tag"])
         names = {audio.name for audio in audios}
         self.assertSetEqual(names, {"coffee", "coffee-slurp-2"})
 
     def test_removeTag(self):
         addAllSounds(self.base_dir, self.commander)
-        self.commander.addTag("coffee", "example tAg   ")
-        self.commander.removeTag("coffee", "  exaMple tag ")
+        self.commander.storage.addTag("coffee", "example tAg   ")
+        self.commander.storage.removeTag("coffee", "  exaMple tag ")
         audios = self.commander.storage.getByTags("example tag")
         self.assertEqual(len(audios), 0)
 
     def test_addTagTooLong(self):
         addAllSounds(self.base_dir, self.commander)
         with self.assertRaises(ValueError):
-            self.commander.addTag("coffee", "a" * (MAX_TAG_LENGTH + 1))
+            self.commander.storage.addTag("coffee", "a" * (MAX_TAG_LENGTH + 1))
 
     def test_renameSuccess(self):
         addAllSounds(self.base_dir, self.commander)
-        self.assertTrue(self.commander.rename("coffee", "new_name"))
+        self.assertTrue(self.commander.storage.rename("coffee", "new_name"))
         sound = self.commander.storage.getByName("new_name")
         self.assertEqual(Path(sound.file_path).stem, "new_name")
         self.assertEqual(sound.name, "new_name")
@@ -132,16 +134,16 @@ class BasicTests(unittest.TestCase):
     def test_renameBadOldName(self):
         addAllSounds(self.base_dir, self.commander)
         with self.assertRaises(NameMissing):
-            self.commander.rename("this_isn't_a_name", "new_name")
+            self.commander.storage.rename("this_isn't_a_name", "new_name")
 
     def test_renameBadNewName(self):
         addAllSounds(self.base_dir, self.commander)
         with self.assertRaises(NameExists):
-            self.commander.rename("coffee", "coffee-slurp-2")
+            self.commander.storage.rename("coffee", "coffee-slurp-2")
 
     def test_getSounds(self):
         addAllSounds(self.base_dir, self.commander)
-        sounds = {sound.name for sound in self.commander.getSounds()}
+        sounds = {sound.name for sound in self.commander.storage.getAll()}
         self.assertSetEqual(
             sounds,
             {
@@ -163,19 +165,19 @@ class BasicTests(unittest.TestCase):
         # remove coffee.wav and toaster.wav and make sure that clean removes them
         Path(self.base_dir, "coffee.wav").unlink()
         Path(self.base_dir, "toaster.wav").unlink()
-        removed_sounds = {sound.name for sound in self.commander.clean()}
+        removed_sounds = {sound.name for sound in self.commander.storage.clean()}
         self.assertSetEqual(removed_sounds, {"coffee", "toaster"})
 
     def test_fuzzySearch(self):
-        self.commander.addSound(Path(self.base_dir, "coffee.wav"))
+        self.commander.storage.addSound(Path(self.base_dir, "coffee.wav"))
         # rename coffee-slurp-[N] to coffee-slurp-[a repeated N times]
         # this way, the edit distance will be different from coffee-slu
         for i in range(2, 9):
-            self.commander.addSound(
+            self.commander.storage.addSound(
                 Path(self.base_dir, f"coffee-slurp-{i}.wav"),
                 name=f"coffee-slurp-{'a' * i}",
             )
-        res = [sound.name for sound in self.commander.fuzzySearch("coffee-", 5)]
+        res = [sound.name for sound in self.commander.storage.fuzzySearch("coffee-", 5)]
         self.assertListEqual(
             res,
             [

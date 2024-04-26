@@ -14,7 +14,7 @@ from threading import Thread
 
 def addAllSounds(base_dir, commander):
     for path in Path(base_dir).iterdir():
-        commander.addSound(path)
+        commander.storage.addSound(path)
 
 
 class customThread:
@@ -61,7 +61,7 @@ class Test_GUI:
     # Threaded instance of the play menu will show up, can progress to the next
     # test on window close
     def testPlayMenu(self, soundsToPlay):
-        sounds = self.commander.getSounds()
+        sounds = self.commander.storage.getAll()
         print("printing names...")
         for sound in sounds:
             print(sound)

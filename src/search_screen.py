@@ -18,7 +18,7 @@ class SearchApp(App):
     def build(self):
         sm = ScreenManager()
         sm.add_widget(Search(name='searchbox'))
-        sm.add_widget(SearchResult(name='searchresult'))
+        sm.add_widget(SearchResultScreen(name='searchresultscreen'))
         sm.current = 'searchbox'
         return sm
     
@@ -26,9 +26,19 @@ class Search(Screen):
     query = StringProperty("")
 
     def search_sound(self):
-        result = commander.fuzzySearch(Search.query, n=1)[0]
-        print(result)
-        print(self.query, file=sys.stdout)
+        result = commander.fuzzySearch(str(Search.query), n=1)[0]
+        
+
+class SearchResultScreen(Screen):
+    self.add_widget(Widget)
+
+        
+class SearchResult(Widget):
+    metadata = ObjectProperty(None)
+
+    
+
+
 
 class LabeledCheckbox(BoxLayout):
     text = StringProperty("")

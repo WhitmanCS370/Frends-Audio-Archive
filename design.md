@@ -5,7 +5,7 @@ In addition to this, our audio archive also tracks metadata associated with each
 
 ## Overview
 
-The business for our application mostly lives inside `src/commands.py`.
+The business for our application mostly lives inside `src/commander.py`.
 A `Commander` object gives you access to all of the core commands such as playing audio and listing available sounds.
 Each available interface (which is currently only our command line interface located in `src/cli.py` can create a `Commander` object, and dispatch the correct function depending on the user's interaction.
 When creating a `Commander` object, you must pass a `Storage` object, which handles all interactions with metadata such as the file paths associated with sounds and tags associated with sounds.
@@ -20,7 +20,7 @@ For example, if we want to create another interface, it could maintain a `Comman
 
 The process for adding a new command involves jumping around more places, but should hopefully still be straightforward.
 
-All commands spawn from `src/commands.py`, so it makes sense to begin by creating a new function in the `Commander` class (which will likely be fairly small).
+All commands spawn from `src/commander.py`, so it makes sense to begin by creating a new function in the `Commander` class (which will likely be fairly small).
 If necessary, a new query can be added to the `Storage` class, which can then be implemented in the database class.
 After this, you can extend whichever interface you choose to allow the user to call your new function.
 For example, extending the CLI involves creating a new subparser, adding any arguments and flags, and then creating an _handle[Command] function.

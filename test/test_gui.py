@@ -1,11 +1,9 @@
 from pathlib import Path
 import shutil
 from src.sqlite_init import create_db
-from src.commands import *
+from src.commander import *
 from src.constants import *
 from src.sqlite_init import *
-from src.sqlite_storage import Sqlite
-from src.storage_commander import StorageCommander
 from src.play_menu import playMenu
 from src.playback_options import PlaybackOptions
 import time
@@ -15,6 +13,7 @@ from threading import Thread
 def addAllSounds(base_dir, commander):
     for path in Path(base_dir).iterdir():
         commander.addSound(path)
+
 
 
 class customThread:
@@ -37,8 +36,7 @@ class Test_GUI:
         shutil.copytree(Path("test", "test_sounds"), self.base_dir)
         self.db_name = Path("test", "test_audio_archive.db")
         create_db(str(self.db_name))
-        storage = StorageCommander(Sqlite(str(self.db_name)), str(self.base_dir))
-        self.commander = Commander(storage)
+        self.commander = Commander(str(self.base_dir), str(self.db_name))
         addAllSounds(self.base_dir, self.commander)
         self.defaultOptions = PlaybackOptions(
             speed=None,

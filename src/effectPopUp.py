@@ -6,7 +6,9 @@ from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.slider import Slider
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.core.window import Window
 
+EFFECT_DATA = None
 """
 Popup that allows the user to change the values of the effects
 
@@ -16,6 +18,7 @@ Determines the type of input to create based on the data type of the effect usin
 """
 class effectsPopUp(Popup):
     def __init__(self, main_window, **kwargs):
+        global EFFECT_DATA
         super(effectsPopUp, self).__init__(**kwargs)
         effect_map = {bool: CheckBoxInput, float: SliderInput, int: SliderInput, list: DoubleRangeSliderInput}
         self.title = 'Effects'
@@ -44,6 +47,7 @@ class effectsPopUp(Popup):
         super().dismiss()
 
     def update_main_window(self):
+        global EFFECT_DATA
         for obj in self.inputs:
             EFFECT_DATA.assign_value(obj.get_name(), obj.get_value())
         self.main_window.update_value_label()
@@ -181,9 +185,11 @@ Temporary main window to display the values of the effects (EFFECT_DATA) and a b
 
 """
 class MainWindow(BoxLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, commander, GUI_Manager, **kwargs):
         super(MainWindow, self).__init__(**kwargs)
-
+        global EFFECT_DATA
+        self.commander = commander
+        self.GUI_Manager = GUI_Manager
         self.values = EFFECT_DATA.get_values()
         self.orientation = 'vertical'
         self.value_label = Label(text=self.dict_to_str(self.values))
@@ -191,12 +197,21 @@ class MainWindow(BoxLayout):
         self.button = Button(text="Open Popup")
         self.button.bind(on_press=self.open_popup)
         self.add_widget(self.button)
+        self.playButton = Button(text="Play")
+        self.playButton.bind(on_press=self.play_sound)
+        self.add_widget(self.playButton)
+
+    def play_sound(self, instance):
+        self.GUI_Manager.setSoundOptions(EFFECT_DATA)
+        self.GUI_Manager.toggleTokenOff()
+        App.get_running_app().stop() 
 
     def open_popup(self, instance):
         popup = effectsPopUp(self)
         popup.open()
 
     def update_value_label(self):
+        global EFFECT_DATA
         self.values = EFFECT_DATA.get_values()
         self.value_label.text = self.dict_to_str(self.values)
     
@@ -241,10 +256,21 @@ class EffectData():
         return {key : value["max"] for key, value in self.data.items()}
 
 
-class MyApp(App):
-    def build(self):
-        return MainWindow()
+class Settings(App):
+    def __init__(self, commander, GUI_Manager):
+        App.__init__(self)
+        global EFFECT_DATA
+        EFFECT_DATA = EffectData()
+        self.GUI_Manager = GUI_Manager
+        self.commander = commander
+    
+    def on_key_down(self, *args):  # Adjusted method signature to accept any number of arguments
+        keyboard, keycode, text, modifiers = args[:4]
+        # Check if the pressed key is the escape key (keycode 27)
+        if keycode == 27:
+            self.GUI_Manager.setSoundOptions(EFFECT_DATA)
+            App.get_running_app().stop() 
 
-if __name__ == '__main__':
-    EFFECT_DATA = EffectData()
-    MyApp().run()
+    def build(self):
+        Window.bind(on_key_down=self.on_key_down)
+        return MainWindow(self.commander, self.GUI_Manager)

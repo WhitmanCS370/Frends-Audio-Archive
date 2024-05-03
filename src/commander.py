@@ -40,6 +40,10 @@ class Commander:
         """
         self.storage = StorageCommander(Sqlite(database_path), sounds_directory)
 
+    #getter method required to use fuzzy search in Luke's search screen GUI
+    def fetchStorageCommander(self):
+        return self.storage
+
     def playAudio(self, names, options):
         """Play a audio files after applying audio effects to them.
 

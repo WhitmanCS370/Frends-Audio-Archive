@@ -31,7 +31,7 @@ class PlaybackOptions:
             raise ValueError("Volume must be nonnegative.")
         if (
             start_percent is not None and end_percent is not None
-        ) and start_percent <= end_percent:
+        ) and start_percent >= end_percent:
             raise ValueError("start_percent must be less than end_percent")
         if (start_sec is not None and end_sec is not None) and start_sec <= end_sec:
             raise ValueError("start_sec must be less than end_sec")

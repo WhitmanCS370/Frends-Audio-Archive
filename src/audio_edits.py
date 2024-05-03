@@ -99,14 +99,15 @@ def _reverse(data, options):
 def _transpose(data, options):
     if options.transpose is None:
         return data
-    with tempfile.NamedTemporaryFile(suffix=".wav") as f:
-        with wave.open(f.name, mode="wb") as wav_file:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path = str(Path(temp_dir, "sound.wav"))
+        with wave.open(path, mode="wb") as wav_file:
             wav_file.setparams(data.params)
             wav_file.writeframes(data.frames)
-        y, sr = librosa.load(f.name)
+        y, sr = librosa.load(path)
         new_y = librosa.effects.pitch_shift(y, sr=sr, n_steps=options.transpose)
-        soundfile.write(f.name, new_y, sr)
-        return _getData(f.name)
+        soundfile.write(path, new_y, sr)
+        return _getData(path)
 
 
 def _cropSound(data, options):

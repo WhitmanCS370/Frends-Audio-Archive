@@ -32,7 +32,7 @@ class MyGridLayout(GridLayout):
         self.menuButton = Button(text="Quit to Menu", font_size=32)
         self.menuButton.bind(on_press=self.quitToMenu)
         self.add_widget(self.menuButton)
-        
+
     def quitToMenu(self, button):
         App.get_running_app().stop()
 
@@ -61,7 +61,9 @@ class PlayMenuApp(App):
         self.options = options
         self.names = names
 
-    def on_key_down(self, *args):  # Adjusted method signature to accept any number of arguments
+    def on_key_down(
+        self, *args
+    ):  # Adjusted method signature to accept any number of arguments
         keyboard, keycode, text, modifiers = args[:4]
         # Check if the pressed key is the escape key (keycode 27)
         if keycode == 27:

@@ -15,7 +15,6 @@ def addAllSounds(base_dir, commander):
         commander.addSound(path)
 
 
-
 class customThread:
 
     def __init__(self):

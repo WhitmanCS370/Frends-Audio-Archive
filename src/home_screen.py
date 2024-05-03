@@ -8,11 +8,13 @@ from sqlite_storage import Sqlite
 from storage_commander import StorageCommander
 from kivy.core.window import Window
 
+
 class HomeScreen(App):
     def __init__(self, commander, GUI_Manager):
         App.__init__(self)
         self.GUI_Manager = GUI_Manager
         self.commander = commander
+
     button_clicked = BooleanProperty(False)
 
     def build(self):
@@ -25,10 +27,10 @@ class HomeScreen(App):
         buttons.add_widget(file_input)
         buttons.add_widget(play)
         return buttons
-    
+
     def closeWindow(self):
         self.GUI_Manager.toggleTokenOff()
-        App.get_running_app().stop() 
+        App.get_running_app().stop()
 
     def on_button_click(self, instance):
         self.button_clicked = True
@@ -37,6 +39,6 @@ class HomeScreen(App):
     def on_enter(self, value):
         storage = self.commander.fetchStorageCommander()
         storage.addSound(value.text)
-    
+
     def set_window_size_to_full_screen(self):
-        Window.fullscreen = 'auto'
+        Window.fullscreen = "auto"

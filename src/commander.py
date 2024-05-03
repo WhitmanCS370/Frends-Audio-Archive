@@ -40,7 +40,7 @@ class Commander:
         """
         self.storage = StorageCommander(Sqlite(database_path), sounds_directory)
 
-    #getter method required to use fuzzy search in Luke's search screen GUI
+    # getter method required to use fuzzy search in Luke's search screen GUI
     def fetchStorageCommander(self):
         return self.storage
 

@@ -97,7 +97,7 @@ def _reverse(data, options):
 
 
 def _transpose(data, options):
-    if options.transpose is None:
+    if options.transpose is None or options.transpose == 0:
         return data
     with tempfile.TemporaryDirectory() as temp_dir:
         path = str(Path(temp_dir, "sound.wav"))
@@ -122,6 +122,9 @@ def _cropSound(data, options):
         start_percent = 0
     if end_percent is None:
         end_percent = 1
+
+    if start_percent == 0 and end_percent == 1:
+        return data
 
     # Calculate start and end indices
     def calculate_index(percent):

@@ -4,6 +4,7 @@ from kivy.uix.button import Button
 import simpleaudio as sa
 from threading import Thread
 from kivy.config import Config
+from kivy.core.window import Window
 
 Config.set("graphics", "width", "200")
 Config.set("graphics", "height", "150")
@@ -17,6 +18,7 @@ class MyGridLayout(GridLayout):
         self.options = options
         self.commander = commander
         self.names = names
+        self.thread = None
         red = [1, 0, 0, 1]
         green = [0, 1, 0, 1]
         self.colorOptions = [red, green]
@@ -27,12 +29,19 @@ class MyGridLayout(GridLayout):
         self.stopRestart.bind(on_press=self.stopOrRestartSound)
         self.add_widget(self.stopRestart)
 
+        self.menuButton = Button(text="Quit to Menu", font_size=32)
+        self.menuButton.bind(on_press=self.quitToMenu)
+        self.add_widget(self.menuButton)
+        
+    def quitToMenu(self, button):
+        App.get_running_app().stop()
+
     def stopOrRestartSound(self, button):
         if self.paused:
-            thread = Thread(
+            self.thread = Thread(
                 target=self.commander.playAudio, args=(self.names, self.options)
             )
-            thread.start()
+            self.thread.start()
             self.stopRestart.text = "Stop"
             self.stopRestart.background_color = self.colorOptions[0]
         else:
@@ -52,7 +61,14 @@ class PlayMenuApp(App):
         self.options = options
         self.names = names
 
+    def on_key_down(self, *args):  # Adjusted method signature to accept any number of arguments
+        keyboard, keycode, text, modifiers = args[:4]
+        # Check if the pressed key is the escape key (keycode 27)
+        if keycode == 27:
+            sa.stop_all()
+
     def build(self):
+        Window.bind(on_key_down=self.on_key_down)
         return MyGridLayout(self.names, self.commander, self.options)
 
 

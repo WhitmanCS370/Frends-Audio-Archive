@@ -6,6 +6,7 @@ from audio_edits import edit
 import simpleaudio as sa
 import tempfile
 import wave
+from pathlib import Path
 
 from storage_commander import StorageCommander
 from sqlite_storage import Sqlite
@@ -102,8 +103,9 @@ class Commander:
             NameExists: [name] already exists in the archive.
             ValueError: [name] is too long.
         """
-        with tempfile.NamedTemporaryFile(suffix=".wav") as f:
-            with wave.open(f.name, "wb") as wav_file:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = str(Path(temp_dir, "sound.wav"))
+            with wave.open(path, "wb") as wav_file:
                 wav_file.setparams(wav_data.params)
                 wav_file.writeframes(wav_data.frames)
-            self.storage.addSound(f.name, name)
+            self.storage.addSound(path, name)

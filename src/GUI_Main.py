@@ -51,7 +51,7 @@ class GUI_Manager:
             start_sec=None,
             end_sec=None,
             save=None,  # same as below comment
-            transpose=None,  # This effect seems to be broken since windows won't write to a temp file. Don't have time to fix this so it gets set to None TODO
+            transpose=effectDict["transpose"],
             parallel=None,
         )
 

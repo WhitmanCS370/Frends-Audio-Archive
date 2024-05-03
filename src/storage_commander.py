@@ -80,7 +80,7 @@ class StorageCommander:
 
         new_path = self.base_directory / f"{name}.wav"
 
-        if not path.samefile(new_path):  # new_path != path:
+        if new_path != path:
             if path.suffix != ".wav":
                 self._convertToWavAndAdd(path, new_path)
             elif (
@@ -271,7 +271,8 @@ class StorageCommander:
             new_path: New path to put sound at.
         """
         audio = AudioSegment.from_file(path)
-        with tempfile.NamedTemporaryFile(suffix=".wav") as f:
-            audio.export(f.name, format="wav")
-            data, samplerate = soundfile.read(f.name)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = str(Path(temp_dir, "sound.wav"))
+            audio.export(path, format="wav")
+            data, samplerate = soundfile.read(path)
             soundfile.write(str(new_path), data, samplerate)

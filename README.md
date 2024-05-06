@@ -1,4 +1,4 @@
-# Johns-Frends
+# Frends Audio Archive
 
 * Andrew Tate
 

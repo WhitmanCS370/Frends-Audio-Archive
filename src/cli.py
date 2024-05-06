@@ -5,8 +5,6 @@ import pathlib
 from playback_options import PlaybackOptions
 from pydub.exceptions import CouldntDecodeError
 from commander import *
-from sqlite_storage import Sqlite
-from storage_commander import StorageCommander
 
 
 class Cli:
@@ -25,7 +23,7 @@ class Cli:
             commander: A Commander object, such as the one in commander.py.
         """
         self.commander = commander
-        self.parser = argparse.ArgumentParser(description="Audio archive.")
+        self.parser = argparse.ArgumentParser(description="Audio archive")
         # since we want to have subself.commander, we create a subparser
         # by specifying dest="command", args.command will now hold the name of
         # the command
@@ -85,7 +83,7 @@ class Cli:
         play_parser.add_argument(
             "--save",
             type=str,
-            help="Saves the audio to a file instead of playing it.",
+            help="Saves the audio to a file instead of playing it",
         )
 
         play_parser.add_argument(
@@ -113,8 +111,8 @@ class Cli:
 
         tag_parser = subparsers.add_parser(
             "tag",
-            description="Add or remove tags from a sound.",
-            help="tag [name] [tag1, tag2, ...] adds tags by default - specify -r to remove the tags.",
+            description="Add or remove tags from a sound",
+            help="tag [name] [tag1, tag2, ...] adds tags by default - specify -r to remove the tags",
         )
         tag_parser.add_argument(
             "name", type=str, help="name of sound to add or remove tag from"
@@ -132,7 +130,7 @@ class Cli:
         list_parser = subparsers.add_parser(
             "list",
             description="Show sounds in audio archive",
-            help="Shows all sounds by default - specify tags to show sounds with tags.",
+            help="Shows all sounds by default - specify tags to show sounds with tags",
         )
         list_parser.add_argument(
             "tags", type=str, nargs="*", help="Show sounds with tags"
@@ -141,6 +139,19 @@ class Cli:
         rename_parser = subparsers.add_parser(
             "rename", description="Rename file in audio archive"
         )
+
+        find_parser = subparsers.add_parser(
+            "find", description="Fuzzy search for sounds in audio archive. Find [n] sounds with the closest name to [name]"
+        )
+        find_parser.add_argument("name", type=str, help="Name to search for")
+        find_parser.add_argument(
+            "n",
+            type=int,
+            nargs="?",
+            default=10,
+            help="Maximum number of results to return (default: 10)",
+        )
+
         rename_parser.add_argument("name", type=str, help="name of sound")
         rename_parser.add_argument("new_name", type=str, help="new name for sound")
 
@@ -184,7 +195,7 @@ class Cli:
             print(f"Error: {e}")
         except NameExists as e:
             print(
-                f"{args.save} already exists in the archive - edited version not saved."
+                f"{args.save} already exists in the archive - edited version not saved"
             )
 
     def _handleList(self, args):
@@ -197,14 +208,19 @@ class Cli:
         for sound in sounds:
             print(sound)
 
+    def _handleFind(self, args):
+        sounds = self.commander.storage.fuzzySearch(args.name, args.n)
+        for sound in sounds:
+            print(sound)
+
     def _handleRename(self, args):
         try:
             self.commander.storage.rename(str(args.name), str(args.new_name))
         except NameMissing:
-            print(f"{str(args.name)} does not exist in the archive.")
+            print(f"{str(args.name)} does not exist in the archive")
         except NameExists:
             print(
-                f"There is already a sound named {str(args.new_name)} in the archive."
+                f"There is already a sound named {str(args.new_name)} in the archive"
             )
 
     def _handleAdd(self, args):
@@ -213,26 +229,26 @@ class Cli:
         except NameExists:
             if args.name is None:
                 print(
-                    f"Invalid filename - the name already exists in the database.  Hint: Try providing a custom name with -n or --name."
+                    f"Invalid filename - the name already exists in the database.  Hint: Try providing a custom name with -n or --name"
                 )
             else:
                 print(
-                    f"There is already a sound named {str(args.name)} in the archive."
+                    f"There is already a sound named {str(args.name)} in the archive"
                 )
         except FileNotFoundError:
-            print(f"{args.filename} is not a valid path to a file.")
+            print(f"{args.filename} is not a valid path to a file")
         except ValueError as e:
             print(e)
         except CouldntDecodeError:
             print(
-                f"Error: Unsupported file format. ffmpeg is required for many file formats."
+                f"Error: Unsupported file format. ffmpeg is required for many file formats"
             )
 
     def _handleRemove(self, args):
         try:
             self.commander.storage.removeSound(args.name)
         except NameMissing:
-            print(f"{args.name} does not exist in the archive.")
+            print(f"{args.name} does not exist in the archive")
 
     def _handleTag(self, args):
         try:
@@ -242,7 +258,7 @@ class Cli:
                 else:
                     self.commander.storage.addTag(args.name, tag)
         except NameMissing:
-            print(f"{args.name} does not exist in the archive.")
+            print(f"{args.name} does not exist in the archive")
         except ValueError as e:
             print(e)
 

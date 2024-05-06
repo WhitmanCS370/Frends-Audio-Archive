@@ -19,7 +19,7 @@ class SearchScreenLayout(BoxLayout):
         super().__init__(orientation="vertical", padding=50, spacing=10)
         self.commander = commander
         self.GUI_Manager = GUI_Manager
-        self.add_widget(Label(text="Johns Friends Search", font_size=50))
+        self.add_widget(Label(text="Frends Search", font_size=50))
         self.searchbox = TextInput(
             hint_text="search here",
             size=(self.width / 2.0, 10),

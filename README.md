@@ -16,7 +16,7 @@
 
 * Luke Samuels: Used John's fuzzy search to make a search screen and search results screen.
 
-* Rhys Sorenson-Graff:
+* Rhys Sorenson-Graff: Rhys created the sound edit menu.
 
 ## Installation:
 
@@ -120,11 +120,13 @@ We implemented fuzzy search by fetching every row from the database and sorting 
 However, this will not scale well.
 If we were to continue working on this project, we would need to rethink how we implemented this feature.
 We think that this project is a good use case for Sqlite, but there are likely better ways to implement fuzzy searching.
+
 Learning Kivy was a challenge in itself, but not for the normal reasons that frontend brings - kivy allows two ways of
 writing its code - an entirely python implementation, as well as its own markup language in files suffixed .kv. Using .kv
 files is excellent for understanding the hierarchical structure of a gui, but passing data to and from them is difficult,
 especially when the rest of the GUI is written entirely in python (no .kv files). One team member learned to use .kv files
 and wrote their components in it, which didn't mesh well with the other teammates, and had to rewrite those components entirely.
+
 Another big challenge was tying all of the GUI components together. We initially intended to do a chain of command
 pattern to have the different screens directly send information to eachother (homescreen -> search -> settings -> play), but 
 due to the all of us learning the Kivy API, our seperate GUIs were not designed to be integrated seamlessly, and required an 
@@ -132,4 +134,5 @@ extra class to organize the seperate GUIs and fetch/send data to each screen. Th
 prematuraly closing any screen would not terminate the program, as the GUI manager would simply toggle to the next screen. So
 we needed a token system where each GUI would refresh the token when not exited early, allowing the program to halt early if needed.
 The manager also has to pass itself to each screen, so that each GUI can send data back to the manager to call the next screen with. 
+
 We also ran into a program where some of the audio functions relied on temp files, which worked on linux, but were not tested until later on Windows, which can't edit temp files, so we had to figure out away around that. 

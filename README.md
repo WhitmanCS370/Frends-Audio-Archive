@@ -16,7 +16,7 @@
 
 * Luke Samuels: Used John's fuzzy search to make a search screen and search results screen.
 
-* Rhys Sorenson-Graff:
+* Rhys Sorenson-Graff: Rhys created the sound edit menu.
 
 ## Installation:
 

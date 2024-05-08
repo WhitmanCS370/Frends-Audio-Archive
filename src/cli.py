@@ -141,7 +141,8 @@ class Cli:
         )
 
         find_parser = subparsers.add_parser(
-            "find", description="Fuzzy search for sounds in audio archive. Find [n] sounds with the closest name to [name]"
+            "find",
+            description="Fuzzy search for sounds in audio archive. Find [n] sounds with the closest name to [name]",
         )
         find_parser.add_argument("name", type=str, help="Name to search for")
         find_parser.add_argument(
@@ -219,9 +220,7 @@ class Cli:
         except NameMissing:
             print(f"{str(args.name)} does not exist in the archive")
         except NameExists:
-            print(
-                f"There is already a sound named {str(args.new_name)} in the archive"
-            )
+            print(f"There is already a sound named {str(args.new_name)} in the archive")
 
     def _handleAdd(self, args):
         try:
@@ -232,9 +231,7 @@ class Cli:
                     f"Invalid filename - the name already exists in the database.  Hint: Try providing a custom name with -n or --name"
                 )
             else:
-                print(
-                    f"There is already a sound named {str(args.name)} in the archive"
-                )
+                print(f"There is already a sound named {str(args.name)} in the archive")
         except FileNotFoundError:
             print(f"{args.filename} is not a valid path to a file")
         except ValueError as e:

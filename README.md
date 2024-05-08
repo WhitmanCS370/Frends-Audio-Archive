@@ -90,20 +90,20 @@ on Windows, which can't edit temp files, so we had to figure out away around tha
 
 ## GUI Instructions:
 
-1. Navigate to the src directory and run: python -m GUI_Main
+1. Navigate to the src directory and run: `python -m GUI_Main`
 2. The Database will automatically initialize if it hasn't, sounds can be added with the text box on the left
-   for instance ../sounds/coffee.wav will add the sound coffee to the software and name it "coffee."
-3. Click Play
+   for instance `../sounds/coffee.wav` will add the sound coffee to the software and name it "`coffee`."
+3. Click `Play`
 4. Now the search screen will be open, search for the name or tags of the sound and it will use fuzzy search to
    pick the 5 closest sounds to what was searched
-5. Select the sound(s) you would like to play and click submit
-6. The settings screen will be open, clicking "open popup" will give a list of modifications that can be applied
+5. Select the sound(s) you would like to play and click `submit`
+6. The settings screen will be open, clicking `"open popup"` will give a list of modifications that can be applied
    to all of the sounds
-7. Click submit to progress to the next screen and apply those effects
-8. The play screen will be open, click play to start playing the sounds and stop to stop, sounds can be replayed after
+7. Click `submit` to progress to the next screen and apply those effects
+8. The play screen will be open, click `play` to start playing the sounds and `stop` to stop, sounds can be replayed after
    clicking stop
-9. Click "back to menu" to navigate back to the homescreen
-10. Press "escape" at anytime to close the program
+9. Click `back to menu` to navigate back to the homescreen
+10. Press `escape` at anytime to close the program
 
 ### Testing:
 
